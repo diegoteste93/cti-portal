@@ -16,5 +16,7 @@ COPY --from=builder /app/node_modules node_modules
 COPY --from=builder /app/packages/shared packages/shared
 COPY --from=builder /app/apps/api/dist apps/api/dist
 COPY --from=builder /app/apps/api/package.json apps/api/
+COPY apps/api/entrypoint.sh apps/api/
+RUN chmod +x apps/api/entrypoint.sh
 EXPOSE 4000
-CMD ["node", "apps/api/dist/main.js"]
+CMD ["sh", "apps/api/entrypoint.sh"]

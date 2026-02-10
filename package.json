@@ -17,7 +17,9 @@
     "build:web": "npm run build -w apps/web",
     "build:worker": "npm run build -w apps/worker",
     "db:migrate": "npm run migration:run -w apps/api",
+    "db:migrate:js": "npm run migration:run:js -w apps/api",
     "db:seed": "npm run seed -w apps/api",
+    "db:seed:js": "npm run seed:js -w apps/api",
     "lint": "npm run lint --workspaces --if-present"
   },
   "engines": {

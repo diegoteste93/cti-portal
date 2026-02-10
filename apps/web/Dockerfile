@@ -7,6 +7,8 @@ RUN npm install --workspace=apps/web --workspace=packages/shared
 COPY packages/shared packages/shared
 COPY apps/web apps/web
 COPY tsconfig.base.json .
+ARG NEXT_PUBLIC_API_URL=http://localhost:4000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build -w packages/shared && npm run build -w apps/web
 
 FROM node:20-alpine
