@@ -4,11 +4,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "baseUrl": ".",
-    "paths": {
-      "@cti/shared": ["../../packages/shared/src"]
-    }
+    "experimentalDecorators": true
   },
   "include": ["src"]
 }
