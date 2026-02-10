@@ -12,8 +12,10 @@ RUN npm run build -w packages/shared && npm run build -w apps/api
 FROM node:20-alpine
 WORKDIR /app
 COPY --from=builder /app/package.json ./
+COPY --from=builder /app/packages/shared/package.json packages/shared/package.json
+COPY --from=builder /app/packages/shared/dist packages/shared/dist
 COPY --from=builder /app/node_modules node_modules
-COPY --from=builder /app/packages/shared packages/shared
+RUN rm -rf node_modules/@cti/shared && ln -s ../../packages/shared node_modules/@cti/shared
 COPY --from=builder /app/apps/api/dist apps/api/dist
 COPY --from=builder /app/apps/api/package.json apps/api/
 COPY apps/api/entrypoint.sh apps/api/
