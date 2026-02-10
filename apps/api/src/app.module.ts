@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -17,8 +17,8 @@ import * as path from 'path';
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres' as const,
+      useFactory: (config: ConfigService): TypeOrmModuleOptions => ({
+        type: 'postgres',
         host: config.get('POSTGRES_HOST', 'localhost'),
         port: config.get<number>('POSTGRES_PORT', 5432),
         username: config.get('POSTGRES_USER', 'cti'),

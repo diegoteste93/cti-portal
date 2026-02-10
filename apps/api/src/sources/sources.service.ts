@@ -71,7 +71,7 @@ export class SourcesService {
       categories = await this.catRepo.findByIds(data.categoryIds);
       delete data.categoryIds;
     }
-    const source = this.sourceRepo.create(data);
+    const source = this.sourceRepo.create(data as Partial<Source>);
     source.categories = categories;
     const saved = await this.sourceRepo.save(source);
     await this.auditService.log(actorId, 'SOURCE_CREATED', 'source', saved.id);
