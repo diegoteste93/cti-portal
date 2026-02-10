@@ -15,6 +15,12 @@ export async function loginWithGoogle(idToken: string): Promise<AuthUser> {
   return result.user;
 }
 
+export async function devLogin(email: string): Promise<AuthUser> {
+  const result = await api.post<{ accessToken: string; user: AuthUser }>('/auth/dev-login', { email });
+  api.setToken(result.accessToken);
+  return result.user;
+}
+
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
     if (!api.getToken()) return null;

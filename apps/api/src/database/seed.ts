@@ -1,19 +1,51 @@
 import 'reflect-metadata';
 import { AppDataSource } from './data-source';
+import { User } from './entities/user.entity';
 import { Group } from './entities/group.entity';
 import { GroupPolicy } from './entities/group-policy.entity';
 import { Category } from './entities/category.entity';
 import { Source } from './entities/source.entity';
-import { SourceType, VisibilityScope } from '@cti/shared';
+import { SourceType, VisibilityScope, Role, UserStatus } from '@cti/shared';
 
 async function seed() {
   const ds = await AppDataSource.initialize();
   console.log('Connected to database.');
 
+  const userRepo = ds.getRepository(User);
   const categoryRepo = ds.getRepository(Category);
   const groupRepo = ds.getRepository(Group);
   const policyRepo = ds.getRepository(GroupPolicy);
   const sourceRepo = ds.getRepository(Source);
+
+  // ---- Admin Root User ----
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@ctiportal.local';
+  const adminName = process.env.ADMIN_NAME || 'CTI Admin';
+  let adminUser = await userRepo.findOneBy({ email: adminEmail });
+  if (!adminUser) {
+    adminUser = userRepo.create({
+      email: adminEmail,
+      name: adminName,
+      role: Role.ADMIN,
+      status: UserStatus.ACTIVE,
+    });
+    adminUser = await userRepo.save(adminUser);
+    console.log(`  Created admin user: ${adminEmail}`);
+  } else {
+    console.log(`  Admin user already exists: ${adminEmail}`);
+  }
+
+  // Assign admin to Segurança group (after groups are created)
+  const assignAdminToSecGroup = async () => {
+    const secGroup = await groupRepo.findOneBy({ name: 'Segurança (SecOps/AppSec)' });
+    if (secGroup && adminUser) {
+      const freshAdmin = await userRepo.findOne({ where: { id: adminUser.id }, relations: ['groups'] });
+      if (freshAdmin && !freshAdmin.groups.some((g) => g.id === secGroup.id)) {
+        freshAdmin.groups = [...freshAdmin.groups, secGroup];
+        await userRepo.save(freshAdmin);
+        console.log(`  Assigned admin to group: ${secGroup.name}`);
+      }
+    }
+  };
 
   // ---- Categories ----
   const categorySeedData = [
@@ -222,7 +254,12 @@ async function seed() {
     }
   }
 
+  // Assign admin user to Segurança group
+  await assignAdminToSecGroup();
+
   console.log('Seed completed successfully!');
+  console.log(`\n  >>> Admin login: ${adminEmail}`);
+  console.log(`  >>> Use POST /api/auth/dev-login { "email": "${adminEmail}" } to get a JWT token\n`);
   await ds.destroy();
 }
 

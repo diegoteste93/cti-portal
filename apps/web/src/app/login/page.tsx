@@ -1,38 +1,16 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginWithGoogle } from '@/lib/auth';
+import { loginWithGoogle, devLogin } from '@/lib/auth';
 import { useAuth } from '@/components/AuthProvider';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [devEmail, setDevEmail] = useState('admin@ctiportal.local');
   const router = useRouter();
   const { refresh } = useAuth();
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      // In production, this would use Google Sign-In SDK to get idToken
-      // For dev/demo: accept a mock token via input
-      const idToken = (document.getElementById('id-token-input') as HTMLInputElement)?.value;
-      if (!idToken) {
-        setError('Please enter your Google ID token or configure Google Sign-In');
-        setLoading(false);
-        return;
-      }
-      await loginWithGoogle(idToken);
-      await refresh();
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Script-based Google OIDC (for production, load GSI client library)
   const handleGoogleRedirect = () => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (clientId) {
@@ -40,6 +18,22 @@ export default function LoginPage() {
       const scope = encodeURIComponent('openid email profile');
       const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=id_token&scope=${scope}&nonce=${Date.now()}`;
       window.location.href = url;
+    } else {
+      setError('Google Client ID not configured. Use dev login below.');
+    }
+  };
+
+  const handleDevLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await devLogin(devEmail);
+      await refresh();
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -58,6 +52,7 @@ export default function LoginPage() {
             </div>
           )}
 
+          {/* Google OIDC Login */}
           <button
             onClick={handleGoogleRedirect}
             disabled={loading}
@@ -72,17 +67,31 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign in with Google'}
           </button>
 
+          {/* Dev Login */}
           <div className="mt-6 pt-4 border-t border-gray-800">
-            <p className="text-xs text-gray-600 mb-3">Development mode: paste ID token</p>
-            <input
-              id="id-token-input"
-              type="text"
-              placeholder="Google ID Token"
-              className="input-field text-sm mb-2"
-            />
-            <button onClick={handleGoogleLogin} disabled={loading} className="btn-primary w-full text-sm">
-              Login with Token
-            </button>
+            <div className="flex items-center gap-2 justify-center mb-3">
+              <span className="badge bg-amber-900 text-amber-200">DEV</span>
+              <span className="text-xs text-gray-500">Quick login (development only)</span>
+            </div>
+            <div className="space-y-2">
+              <input
+                type="email"
+                value={devEmail}
+                onChange={(e) => setDevEmail(e.target.value)}
+                placeholder="Email do usuário"
+                className="input-field text-sm"
+              />
+              <button
+                onClick={handleDevLogin}
+                disabled={loading}
+                className="w-full bg-amber-600 hover:bg-amber-500 text-white font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 text-sm"
+              >
+                {loading ? 'Entrando...' : 'Entrar como Dev'}
+              </button>
+              <p className="text-[10px] text-gray-600 mt-1">
+                Default admin: admin@ctiportal.local (criado pelo seed)
+              </p>
+            </div>
           </div>
 
           <p className="mt-6 text-xs text-gray-600">

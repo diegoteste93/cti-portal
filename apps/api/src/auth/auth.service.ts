@@ -117,6 +117,40 @@ export class AuthService {
     return { accessToken, user };
   }
 
+  async devLogin(email: string): Promise<{ accessToken: string; user: User }> {
+    if (this.config.get('NODE_ENV') === 'production') {
+      throw new UnauthorizedException('Dev login is disabled in production');
+    }
+
+    this.logger.warn(`DEV LOGIN used for: ${email}`);
+
+    let user = await this.userRepo.findOne({
+      where: { email },
+      relations: ['groups'],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found. Run seed first: npm run db:seed');
+    }
+
+    if (user.status === UserStatus.INACTIVE) {
+      throw new UnauthorizedException('User account is deactivated');
+    }
+
+    user.lastLoginAt = new Date();
+    await this.userRepo.save(user);
+
+    await this.auditService.log(user.id, 'DEV_LOGIN', 'user', user.id);
+
+    const accessToken = this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return { accessToken, user };
+  }
+
   async validateUserById(userId: string): Promise<User | null> {
     return this.userRepo.findOne({
       where: { id: userId, status: UserStatus.ACTIVE },
