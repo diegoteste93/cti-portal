@@ -1,0 +1,93 @@
+'use client';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { AuthUser, isAdmin, isEditor, logout } from '@/lib/auth';
+
+const nav = [
+  { href: '/dashboard', label: 'Dashboard', icon: '□' },
+  { href: '/feed', label: 'Feed', icon: '◈' },
+  { href: '/preferences', label: 'My Feed', icon: '☆' },
+];
+
+const adminNav = [
+  { href: '/admin/sources', label: 'Sources', icon: '⊕' },
+  { href: '/admin/categories', label: 'Categories', icon: '≡' },
+  { href: '/admin/users', label: 'Users', icon: '⊙' },
+  { href: '/admin/groups', label: 'Groups', icon: '⊞' },
+  { href: '/admin/audit', label: 'Audit Log', icon: '◎' },
+];
+
+export default function Sidebar({ user }: { user: AuthUser }) {
+  const pathname = usePathname();
+
+  return (
+    <aside className="w-64 bg-gray-900 border-r border-gray-800 min-h-screen flex flex-col">
+      <div className="p-6 border-b border-gray-800">
+        <h1 className="text-xl font-bold text-cti-accent">CTI Portal</h1>
+        <p className="text-xs text-gray-500 mt-1">Threat Intelligence</p>
+      </div>
+
+      <nav className="flex-1 p-4 space-y-1">
+        {nav.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+              pathname === item.href
+                ? 'bg-cti-accent/10 text-cti-accent'
+                : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'
+            }`}
+          >
+            <span className="text-lg">{item.icon}</span>
+            {item.label}
+          </Link>
+        ))}
+
+        {(isAdmin(user) || isEditor(user)) && (
+          <>
+            <div className="pt-4 pb-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Admin
+              </span>
+            </div>
+            {adminNav.map((item) => {
+              if (['Users', 'Groups', 'Audit Log'].includes(item.label) && !isAdmin(user)) return null;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    pathname.startsWith(item.href)
+                      ? 'bg-cti-accent/10 text-cti-accent'
+                      : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'
+                  }`}
+                >
+                  <span className="text-lg">{item.icon}</span>
+                  {item.label}
+                </Link>
+              );
+            })}
+          </>
+        )}
+      </nav>
+
+      <div className="p-4 border-t border-gray-800">
+        <div className="flex items-center gap-3">
+          {user.picture && (
+            <img src={user.picture} alt="" className="w-8 h-8 rounded-full" />
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{user.name}</p>
+            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+          </div>
+        </div>
+        <button
+          onClick={logout}
+          className="mt-3 w-full text-left text-xs text-gray-500 hover:text-red-400 transition-colors"
+        >
+          Sign out
+        </button>
+      </div>
+    </aside>
+  );
+}
