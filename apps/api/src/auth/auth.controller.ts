@@ -1,15 +1,20 @@
 import { Controller, Post, Body, Get, UseGuards, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { AuthService } from './auth.service';
 import { CurrentUser } from '../common/decorators';
 import { User } from '../database/entities';
 
 class GoogleLoginDto {
+  @IsString()
+  @IsNotEmpty()
   idToken: string;
 }
 
 class DevLoginDto {
+  @IsEmail()
+  @IsNotEmpty()
   email: string;
 }
 
