@@ -199,10 +199,10 @@ function FeedContent() {
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-xs text-gray-500">{item.source?.name || 'Desconhecido'}</span>
                       <span className="text-xs text-gray-600">{new Date(item.collectedAt).toLocaleString()}</span>
-                      {item.cves && item.cves.split(',').filter(Boolean).map((cve) => (
+                      {item.cves && typeof item.cves === 'string' && item.cves.split(',').filter(Boolean).map((cve) => (
                         <span key={cve} className="badge badge-critical text-[10px]">{cve}</span>
                       ))}
-                      {item.tags && item.tags.split(',').filter(Boolean).slice(0, 5).map((tag) => (
+                      {item.tags && typeof item.tags === 'string' && item.tags.split(',').filter(Boolean).slice(0, 5).map((tag) => (
                         <span key={tag} className="badge badge-tag text-[10px]">{tag}</span>
                       ))}
                     </div>

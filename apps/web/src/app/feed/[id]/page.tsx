@@ -45,7 +45,7 @@ export default function ItemDetailPage() {
 
   if (authLoading || !user) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Carregando...</div></div>;
 
-  const splitField = (val: string | undefined) => val ? val.split(',').filter(Boolean) : [];
+  const splitField = (val: string | undefined) => val && typeof val === 'string' ? val.split(',').filter(Boolean) : [];
 
   return (
     <div className="flex min-h-screen">
