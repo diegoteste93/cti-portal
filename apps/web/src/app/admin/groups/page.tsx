@@ -10,10 +10,10 @@ interface Group {
   name: string;
   description?: string;
   policy?: {
-    followedTags: string[];
-    followedCategories: string[];
-    keywordsInclude: string[];
-    keywordsExclude: string[];
+    followedTags?: string[];
+    followedCategories?: string[];
+    keywordsInclude?: string[];
+    keywordsExclude?: string[];
   };
 }
 
@@ -102,23 +102,23 @@ export default function GroupsPage() {
                   </div>
                 ) : group.policy ? (
                   <div className="pt-3 border-t border-gray-800 space-y-2">
-                    {group.policy.followedTags.length > 0 && (
+                    {(group.policy.followedTags || []).length > 0 && (
                       <div>
                         <span className="text-xs text-gray-500">Tags: </span>
-                        {group.policy.followedTags.map((t) => <span key={t} className="badge badge-tag text-[10px] mr-1">{t}</span>)}
+                        {(group.policy.followedTags || []).map((t) => <span key={t} className="badge badge-tag text-[10px] mr-1">{t}</span>)}
                       </div>
                     )}
-                    {group.policy.followedCategories.length > 0 && (
+                    {(group.policy.followedCategories || []).length > 0 && (
                       <div>
                         <span className="text-xs text-gray-500">Categorias: </span>
-                        {group.policy.followedCategories.map((c) => <span key={c} className="badge badge-category text-[10px] mr-1">{c}</span>)}
+                        {(group.policy.followedCategories || []).map((c) => <span key={c} className="badge badge-category text-[10px] mr-1">{c}</span>)}
                       </div>
                     )}
-                    {group.policy.keywordsInclude.length > 0 && (
-                      <div><span className="text-xs text-gray-500">Palavras-chave Incluir: </span><span className="text-xs text-gray-300">{group.policy.keywordsInclude.join(', ')}</span></div>
+                    {(group.policy.keywordsInclude || []).length > 0 && (
+                      <div><span className="text-xs text-gray-500">Palavras-chave Incluir: </span><span className="text-xs text-gray-300">{(group.policy.keywordsInclude || []).join(', ')}</span></div>
                     )}
-                    {group.policy.keywordsExclude.length > 0 && (
-                      <div><span className="text-xs text-gray-500">Palavras-chave Excluir: </span><span className="text-xs text-gray-300">{group.policy.keywordsExclude.join(', ')}</span></div>
+                    {(group.policy.keywordsExclude || []).length > 0 && (
+                      <div><span className="text-xs text-gray-500">Palavras-chave Excluir: </span><span className="text-xs text-gray-300">{(group.policy.keywordsExclude || []).join(', ')}</span></div>
                     )}
                   </div>
                 ) : null}

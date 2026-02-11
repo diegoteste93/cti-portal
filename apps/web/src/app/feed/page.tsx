@@ -164,7 +164,7 @@ function FeedContent() {
                   onChange={(e) => setUsePersonalized(e.target.checked)}
                   className="rounded"
                 />
-                Feed Personalizado
+                Feed personalizado
               </label>
             </div>
           </form>

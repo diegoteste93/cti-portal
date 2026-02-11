@@ -9,7 +9,7 @@ import { SourceType, VisibilityScope, Role, UserStatus } from '@cti/shared';
 
 async function seed() {
   const ds = await AppDataSource.initialize();
-  console.log('Connected to database.');
+  console.log('Conectado ao banco de dados.');
 
   const userRepo = ds.getRepository(User);
   const categoryRepo = ds.getRepository(Category);
@@ -17,9 +17,9 @@ async function seed() {
   const policyRepo = ds.getRepository(GroupPolicy);
   const sourceRepo = ds.getRepository(Source);
 
-  // ---- Admin Root User ----
+  // ---- Usuário administrador principal ----
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@ctiportal.local';
-  const adminName = process.env.ADMIN_NAME || 'CTI Admin';
+  const adminName = process.env.ADMIN_NAME || 'Administrador CTI';
   let adminUser = await userRepo.findOneBy({ email: adminEmail });
   if (!adminUser) {
     adminUser = userRepo.create({
@@ -29,12 +29,12 @@ async function seed() {
       status: UserStatus.ACTIVE,
     });
     adminUser = await userRepo.save(adminUser);
-    console.log(`  Created admin user: ${adminEmail}`);
+    console.log(`  Usuário administrador criado: ${adminEmail}`);
   } else {
-    console.log(`  Admin user already exists: ${adminEmail}`);
+    console.log(`  Usuário administrador já existe: ${adminEmail}`);
   }
 
-  // Assign admin to Segurança group (after groups are created)
+  // Atribui administrador ao grupo Segurança (após criação dos grupos)
   const assignAdminToSecGroup = async () => {
     const secGroup = await groupRepo.findOneBy({ name: 'Segurança (SecOps/AppSec)' });
     if (secGroup && adminUser) {
@@ -42,22 +42,22 @@ async function seed() {
       if (freshAdmin && !freshAdmin.groups.some((g) => g.id === secGroup.id)) {
         freshAdmin.groups = [...freshAdmin.groups, secGroup];
         await userRepo.save(freshAdmin);
-        console.log(`  Assigned admin to group: ${secGroup.name}`);
+        console.log(`  Administrador atribuído ao grupo: ${secGroup.name}`);
       }
     }
   };
 
-  // ---- Categories ----
+  // ---- Categorias ----
   const categorySeedData = [
-    { name: 'Vulnerabilities', slug: 'vulnerability', description: 'CVEs, security advisories, and vulnerability disclosures' },
-    { name: 'Exploits & Attacks', slug: 'exploit', description: 'Active exploits, attack techniques and PoCs' },
-    { name: 'Ransomware', slug: 'ransomware', description: 'Ransomware campaigns, groups, and incidents' },
-    { name: 'Fraud', slug: 'fraud', description: 'Fraud schemes, scams, and social engineering' },
-    { name: 'Data Leaks', slug: 'data_leak', description: 'Data breaches and leaked information' },
-    { name: 'Malware', slug: 'malware', description: 'Malware analysis and campaigns' },
-    { name: 'Phishing', slug: 'phishing', description: 'Phishing campaigns and techniques' },
-    { name: 'Supply Chain', slug: 'supply_chain', description: 'Supply chain attacks and compromises' },
-    { name: 'General', slug: 'general', description: 'General threat intelligence and news' },
+    { name: 'Vulnerabilidades', slug: 'vulnerability', description: 'CVEs, boletins de segurança e divulgações de vulnerabilidades' },
+    { name: 'Exploits e Ataques', slug: 'exploit', description: 'Exploits ativos, técnicas de ataque e PoCs' },
+    { name: 'Ransomware', slug: 'ransomware', description: 'Campanhas, grupos e incidentes de ransomware' },
+    { name: 'Fraude', slug: 'fraud', description: 'Esquemas de fraude, golpes e engenharia social' },
+    { name: 'Vazamentos de Dados', slug: 'data_leak', description: 'Violações de dados e informações vazadas' },
+    { name: 'Malware', slug: 'malware', description: 'Análises e campanhas de malware' },
+    { name: 'Phishing', slug: 'phishing', description: 'Campanhas e técnicas de phishing' },
+    { name: 'Cadeia de Suprimentos', slug: 'supply_chain', description: 'Ataques e comprometimentos na cadeia de suprimentos' },
+    { name: 'Geral', slug: 'general', description: 'Inteligência de ameaças e notícias gerais' },
   ];
 
   const categories: Record<string, Category> = {};
@@ -65,16 +65,16 @@ async function seed() {
     let existing = await categoryRepo.findOneBy({ slug: cat.slug });
     if (!existing) {
       existing = await categoryRepo.save(categoryRepo.create(cat));
-      console.log(`  Created category: ${cat.name}`);
+      console.log(`  Categoria criada: ${cat.name}`);
     }
     categories[cat.slug] = existing;
   }
 
-  // ---- Groups ----
+  // ---- Grupos ----
   const groupSeedData = [
     {
       name: 'Arquitetura',
-      description: 'Architecture team',
+      description: 'Time de arquitetura',
       policy: {
         followedTags: ['java', 'spring', 'spring_boot', 'node_js', 'react', 'react_native', 'docker', 'kubernetes'],
         followedCategories: ['vulnerability', 'exploit', 'supply_chain'],
@@ -84,7 +84,7 @@ async function seed() {
     },
     {
       name: 'Dev React (Web)',
-      description: 'React Web developers',
+      description: 'Desenvolvedores React Web',
       policy: {
         followedTags: ['react', 'javascript', 'typescript', 'npm', 'next_js', 'webpack'],
         followedCategories: ['vulnerability', 'exploit', 'supply_chain'],
@@ -94,7 +94,7 @@ async function seed() {
     },
     {
       name: 'Dev React Native (Mobile)',
-      description: 'React Native mobile developers',
+      description: 'Desenvolvedores mobile React Native',
       policy: {
         followedTags: ['react_native', 'react', 'javascript', 'typescript', 'npm', 'android', 'ios'],
         followedCategories: ['vulnerability', 'exploit', 'supply_chain', 'malware'],
@@ -104,7 +104,7 @@ async function seed() {
     },
     {
       name: 'Dev Node.js (Backend)',
-      description: 'Node.js backend developers',
+      description: 'Desenvolvedores backend Node.js',
       policy: {
         followedTags: ['node_js', 'npm', 'express', 'nestjs', 'javascript', 'typescript'],
         followedCategories: ['vulnerability', 'exploit', 'supply_chain'],
@@ -114,7 +114,7 @@ async function seed() {
     },
     {
       name: 'Dev Java (Backend)',
-      description: 'Java backend developers',
+      description: 'Desenvolvedores backend Java',
       policy: {
         followedTags: ['java', 'spring', 'spring_boot', 'maven', 'gradle', 'log4j', 'jackson'],
         followedCategories: ['vulnerability', 'exploit', 'supply_chain'],
@@ -124,7 +124,7 @@ async function seed() {
     },
     {
       name: 'Gerente de Projeto (PM)',
-      description: 'Project managers',
+      description: 'Gerentes de projeto',
       policy: {
         followedTags: [],
         followedCategories: ['ransomware', 'data_leak', 'fraud', 'general'],
@@ -134,7 +134,7 @@ async function seed() {
     },
     {
       name: 'Segurança (SecOps/AppSec)',
-      description: 'Security operations and AppSec',
+      description: 'Operações de segurança e AppSec',
       policy: {
         followedTags: ['java', 'spring', 'spring_boot', 'node_js', 'npm', 'react', 'react_native'],
         followedCategories: ['vulnerability', 'exploit', 'ransomware', 'data_leak', 'fraud', 'malware', 'phishing', 'supply_chain'],
@@ -148,7 +148,7 @@ async function seed() {
     let existing = await groupRepo.findOneBy({ name: g.name });
     if (!existing) {
       existing = await groupRepo.save(groupRepo.create({ name: g.name, description: g.description }));
-      console.log(`  Created group: ${g.name}`);
+      console.log(`  Grupo criado: ${g.name}`);
     }
     let policy = await policyRepo.findOneBy({ groupId: existing.id });
     if (!policy) {
@@ -160,11 +160,11 @@ async function seed() {
         keywordsExclude: g.policy.keywordsExclude,
       });
       await policyRepo.save(policy);
-      console.log(`  Created policy for group: ${g.name}`);
+      console.log(`  Política criada para o grupo: ${g.name}`);
     }
   }
 
-  // ---- Default OSINT Sources ----
+  // ---- Fontes OSINT padrão ----
   const sourceSeedData = [
     {
       name: 'NVD - National Vulnerability Database',
@@ -250,20 +250,20 @@ async function seed() {
           [saved.id, category.id]
         );
       }
-      console.log(`  Created source: ${s.name}`);
+      console.log(`  Fonte criada: ${s.name}`);
     }
   }
 
-  // Assign admin user to Segurança group
+  // Atribui o usuário administrador ao grupo Segurança
   await assignAdminToSecGroup();
 
-  console.log('Seed completed successfully!');
-  console.log(`\n  >>> Admin login: ${adminEmail}`);
-  console.log(`  >>> Use POST /api/auth/dev-login { "email": "${adminEmail}" } to get a JWT token\n`);
+  console.log('Seed concluído com sucesso!');
+  console.log(`\n  >>> Login do administrador: ${adminEmail}`);
+  console.log(`  >>> Use POST /api/auth/dev-login { "email": "${adminEmail}" } para obter um token JWT\n`);
   await ds.destroy();
 }
 
 seed().catch((err) => {
-  console.error('Seed failed:', err);
+  console.error('Falha no seed:', err);
   process.exit(1);
 });

@@ -10,10 +10,10 @@ interface DashboardStats {
   totalItems: number;
   itemsToday: number;
   itemsThisWeek: number;
-  byCategoryCount: Record<string, number>;
-  topCves: string[];
-  topTags: string[];
-  recentItems: any[];
+  byCategoryCount?: Record<string, number>;
+  topCves?: string[];
+  topTags?: string[];
+  recentItems?: any[];
 }
 
 export default function DashboardPage() {
@@ -87,7 +87,7 @@ export default function DashboardPage() {
               <div className="card">
                 <h3 className="text-lg font-semibold mb-4">Por Categoria</h3>
                 <div className="space-y-2">
-                  {Object.entries(stats.byCategoryCount).map(([slug, count]) => (
+                  {Object.entries(stats.byCategoryCount || {}).map(([slug, count]) => (
                     <div key={slug} className={`flex justify-between items-center p-2 rounded border ${categoryColors[slug] || 'bg-gray-800 border-gray-700'}`}>
                       <span className="text-sm">{categoryLabels[slug] || slug}</span>
                       <span className="font-mono font-bold">{count}</span>
@@ -97,11 +97,11 @@ export default function DashboardPage() {
               </div>
 
               <div className="space-y-6">
-                {stats.topCves.length > 0 && (
+                {(stats.topCves || []).length > 0 && (
                   <div className="card">
                     <h3 className="text-lg font-semibold mb-3">CVEs em Destaque</h3>
                     <div className="flex flex-wrap gap-2">
-                      {stats.topCves.map((cve) => (
+                      {(stats.topCves || []).map((cve) => (
                         <Link
                           key={cve}
                           href={`/feed?cve=${cve}`}
@@ -114,11 +114,11 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {stats.topTags.length > 0 && (
+                {(stats.topTags || []).length > 0 && (
                   <div className="card">
                     <h3 className="text-lg font-semibold mb-3">Principais Tecnologias</h3>
                     <div className="flex flex-wrap gap-2">
-                      {stats.topTags.map((tag) => (
+                      {(stats.topTags || []).map((tag) => (
                         <Link
                           key={tag}
                           href={`/feed?tags=${tag}`}
@@ -140,7 +140,7 @@ export default function DashboardPage() {
                 <Link href="/feed" className="text-sm text-cti-accent hover:underline">Ver todos</Link>
               </div>
               <div className="space-y-3">
-                {stats.recentItems.map((item: any) => (
+                {(stats.recentItems || []).map((item: any) => (
                   <Link
                     key={item.id}
                     href={`/feed/${item.id}`}
@@ -162,7 +162,7 @@ export default function DashboardPage() {
                     </div>
                   </Link>
                 ))}
-                {stats.recentItems.length === 0 && (
+                {(stats.recentItems || []).length === 0 && (
                   <p className="text-gray-500 text-sm text-center py-8">
                     Nenhum item ainda. Configure fontes para começar a coletar dados de inteligência de ameaças.
                   </p>

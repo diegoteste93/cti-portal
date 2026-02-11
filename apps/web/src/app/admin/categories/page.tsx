@@ -63,7 +63,7 @@ export default function CategoriesPage() {
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Slug</label>
-                <input value={form.slug} onChange={(e) => setForm({...form, slug: e.target.value})} className="input-field" required placeholder="ex. minha_categoria" />
+                <input value={form.slug} onChange={(e) => setForm({...form, slug: e.target.value})} className="input-field" required placeholder="ex.: minha_categoria" />
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Descrição</label>

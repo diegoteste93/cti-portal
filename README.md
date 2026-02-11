@@ -44,7 +44,7 @@ cti-portal/
 └── package.json
 ```
 
-## Setup Local
+## Setup local
 
 ### Pré-requisitos
 
@@ -96,6 +96,30 @@ npm run dev:worker   # Worker de ingestão
 docker compose up --build
 ```
 
+
+## Deploy com Docker em VPS
+
+Se você está rodando em uma VPS com Docker, o fluxo recomendado é:
+
+```bash
+# 1) Clonar projeto e configurar variáveis
+git clone <repo-url> cti-portal
+cd cti-portal
+cp .env.example .env
+
+# 2) Build + subida de todos os serviços
+docker compose up -d --build
+
+# 3) Executar migrações e seed no container da API
+docker compose exec api npm run migration:run:js
+docker compose exec api npm run seed:js
+```
+
+Dicas:
+- Garanta que `NEXT_PUBLIC_API_URL` aponte para o host público correto da API.
+- Configure proxy reverso (Nginx/Traefik) com HTTPS para `web` e `api`.
+- Em produção, desative o login dev e mantenha apenas OIDC.
+
 ## Configuração Google OIDC
 
 1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
@@ -117,7 +141,7 @@ docker compose up --build
 | `github_releases` | GitHub Advisories | URL + token (opcional) |
 | `html_scrape` | Scraping HTML | URL + selectors (itemSelector, titleSelector, etc.) |
 
-### Fontes Pré-configuradas (Seed)
+### Fontes Pré-configuradas (Seed inicial)
 
 - NVD - National Vulnerability Database
 - CISA Known Exploited Vulnerabilities
@@ -130,13 +154,13 @@ docker compose up --build
 
 ### Adicionando Nova Fonte via UI
 
-1. Acesse Admin > Sources
-2. Clique em "+ Add Source"
-3. Preencha: nome, tipo, URL, schedule cron, categorias
+1. Acesse Administração > Fontes
+2. Clique em "+ Adicionar Fonte"
+3. Preencha: nome, tipo, URL, agendamento cron, categorias
 4. Para APIs com autenticação, configure headers/tokens
-5. Use "Fetch Now" para testar
+5. Use "Coletar Agora" para testar
 
-### Mapping Config (generic_api)
+### Configuração de Mapping (generic_api)
 
 ```json
 {
@@ -165,19 +189,19 @@ docker compose up --build
 
 ### Como funciona o Feed Personalizado
 
-1. **Preferências do usuário** (configuradas em "My Feed")
+1. **Preferências do usuário** (configuradas em "Meu Feed")
 2. **Políticas dos grupos** aos quais pertence
 3. O feed combina (OR) tags e categorias de ambas as fontes
 4. Keywords de exclusão são aplicadas para filtrar ruído
 
-### RBAC (Roles)
+### RBAC (Papéis)
 
-| Role | Permissões |
+| Papel | Permissões |
 |------|-----------|
-| Admin | Tudo: fontes, categorias, usuários, grupos, auditoria |
-| CTI Editor | Gerenciar fontes e categorias |
-| Group Manager | Gerenciar membros e políticas do grupo |
-| Viewer | Visualizar feed e items |
+| Administrador | Tudo: fontes, categorias, usuários, grupos, auditoria |
+| Editor de CTI | Gerenciar fontes e categorias |
+| Gerente de Grupo | Gerenciar membros e políticas do grupo |
+| Visualizador | Visualizar feed e itens |
 
 ### ABAC (Visibilidade)
 
@@ -188,15 +212,15 @@ docker compose up --build
 
 Categorias são data-driven (gerenciadas via UI/API, sem alteração de código):
 
-- Vulnerabilities
-- Exploits & Attacks
+- Vulnerabilidades
+- Exploits e Ataques
 - Ransomware
-- Fraud
-- Data Leaks
+- Fraude
+- Vazamentos de Dados
 - Malware
 - Phishing
-- Supply Chain
-- General
+- Cadeia de Suprimentos
+- Geral
 
 ## Enriquecimento Automático
 

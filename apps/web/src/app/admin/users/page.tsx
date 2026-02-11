@@ -12,7 +12,7 @@ interface UserItem {
   picture?: string;
   status: string;
   role: string;
-  groups: { id: string; name: string }[];
+  groups?: { id: string; name: string }[];
   createdAt: string;
 }
 
@@ -46,7 +46,7 @@ export default function UsersPage() {
   const handleGroupAssign = async (userId: string, groupId: string, add: boolean) => {
     const u = users.find((u) => u.id === userId);
     if (!u) return;
-    const currentIds = u.groups.map((g) => g.id);
+    const currentIds = (u.groups || []).map((g) => g.id);
     const newIds = add ? [...currentIds, groupId] : currentIds.filter((id) => id !== groupId);
     const updated = await api.patch<UserItem>(`/users/${userId}/groups`, { groupIds: newIds });
     setUsers((prev) => prev.map((u) => u.id === userId ? updated : u));
@@ -93,8 +93,8 @@ export default function UsersPage() {
                     >
                       <option value="viewer">Visualizador</option>
                       <option value="group_manager">Gerente de Grupo</option>
-                      <option value="cti_editor">Editor CTI</option>
-                      <option value="admin">Admin</option>
+                      <option value="cti_editor">Editor de CTI</option>
+                      <option value="admin">Administrador</option>
                     </select>
                     <button
                       onClick={() => handleStatusToggle(u.id, u.status)}
@@ -108,7 +108,7 @@ export default function UsersPage() {
                   <p className="text-xs text-gray-500 mb-2">Grupos:</p>
                   <div className="flex flex-wrap gap-2">
                     {groups.map((g) => {
-                      const isMember = u.groups.some((ug) => ug.id === g.id);
+                      const isMember = (u.groups || []).some((ug) => ug.id === g.id);
                       return (
                         <button
                           key={g.id}

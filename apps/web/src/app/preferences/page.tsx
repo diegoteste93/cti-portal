@@ -105,11 +105,11 @@ export default function PreferencesPage() {
         ) : (
           <div className="max-w-3xl space-y-6">
             {/* Groups info */}
-            {user.groups.length > 0 && (
+            {(user.groups || []).length > 0 && (
               <div className="card bg-cti-accent/5 border-cti-accent/20">
                 <h3 className="text-sm font-semibold mb-2">Seus Grupos</h3>
                 <div className="flex flex-wrap gap-2">
-                  {user.groups.map((g) => (
+                  {(user.groups || []).map((g) => (
                     <span key={g.id} className="badge bg-cti-accent/20 text-cti-accent">{g.name}</span>
                   ))}
                 </div>
@@ -167,7 +167,7 @@ export default function PreferencesPage() {
                     value={kwInclude}
                     onChange={(e) => { setKwInclude(e.target.value); setSaved(false); }}
                     className="input-field"
-                    placeholder="ex. log4j, spring boot, react native"
+                    placeholder="ex.: log4j, spring boot, react native"
                   />
                 </div>
                 <div>
@@ -176,7 +176,7 @@ export default function PreferencesPage() {
                     value={kwExclude}
                     onChange={(e) => { setKwExclude(e.target.value); setSaved(false); }}
                     className="input-field"
-                    placeholder="ex. wordpress, drupal"
+                    placeholder="ex.: wordpress, drupal"
                   />
                 </div>
               </div>
