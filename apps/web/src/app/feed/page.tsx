@@ -90,7 +90,7 @@ function FeedContent() {
     if (user) fetchItems();
   }, [user, fetchItems]);
 
-  if (authLoading || !user) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Loading...</div></div>;
+  if (authLoading || !user) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Carregando...</div></div>;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,34 +114,34 @@ function FeedContent() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search items... (full-text, AND/OR, CVE, keywords)"
+                placeholder="Pesquisar itens... (texto completo, AND/OR, CVE, palavras-chave)"
                 className="input-field flex-1"
               />
-              <button type="submit" className="btn-primary">Search</button>
-              <button type="button" onClick={clearFilters} className="btn-secondary">Clear</button>
+              <button type="submit" className="btn-primary">Pesquisar</button>
+              <button type="button" onClick={clearFilters} className="btn-secondary">Limpar</button>
             </div>
 
             <div className="flex flex-wrap gap-3 items-center">
               <select value={category} onChange={(e) => { setCategory(e.target.value); }} className="input-field w-auto">
-                <option value="">All Categories</option>
+                <option value="">Todas as Categorias</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.slug}>{c.name}</option>
                 ))}
               </select>
 
               <select value={severity} onChange={(e) => setSeverity(e.target.value)} className="input-field w-auto">
-                <option value="">All Severities</option>
-                <option value="CRITICAL">Critical</option>
-                <option value="HIGH">High</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="LOW">Low</option>
+                <option value="">Todas as Severidades</option>
+                <option value="CRITICAL">Crítico</option>
+                <option value="HIGH">Alto</option>
+                <option value="MEDIUM">Médio</option>
+                <option value="LOW">Baixo</option>
               </select>
 
               <input
                 type="text"
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
-                placeholder="Technology tag..."
+                placeholder="Tag de tecnologia..."
                 className="input-field w-40"
               />
 
@@ -154,7 +154,7 @@ function FeedContent() {
               />
 
               <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="input-field w-auto" />
-              <span className="text-gray-500">to</span>
+              <span className="text-gray-500">até</span>
               <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="input-field w-auto" />
 
               <label className="flex items-center gap-2 text-sm text-gray-400">
@@ -164,24 +164,24 @@ function FeedContent() {
                   onChange={(e) => setUsePersonalized(e.target.checked)}
                   className="rounded"
                 />
-                Personalized Feed
+                Feed Personalizado
               </label>
             </div>
           </form>
 
           <div className="mt-2 text-xs text-gray-500">
-            {total} results {search && `for "${search}"`}
+            {total} resultados {search && `para "${search}"`}
           </div>
         </div>
 
         {/* Results */}
         <div className="p-4 space-y-3">
           {loading ? (
-            <div className="text-center py-12 text-gray-500">Loading items...</div>
+            <div className="text-center py-12 text-gray-500">Carregando itens...</div>
           ) : items.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No items found</p>
-              <p className="text-gray-600 text-sm mt-2">Try adjusting your filters or add more sources.</p>
+              <p className="text-gray-500 text-lg">Nenhum item encontrado</p>
+              <p className="text-gray-600 text-sm mt-2">Tente ajustar seus filtros ou adicione mais fontes.</p>
             </div>
           ) : (
             items.map((item) => (
@@ -197,7 +197,7 @@ function FeedContent() {
                       <p className="text-sm text-gray-400 line-clamp-2">{item.summary}</p>
                     )}
                     <div className="flex items-center gap-3 mt-2">
-                      <span className="text-xs text-gray-500">{item.source?.name || 'Unknown'}</span>
+                      <span className="text-xs text-gray-500">{item.source?.name || 'Desconhecido'}</span>
                       <span className="text-xs text-gray-600">{new Date(item.collectedAt).toLocaleString()}</span>
                       {item.cves && item.cves.split(',').filter(Boolean).map((cve) => (
                         <span key={cve} className="badge badge-critical text-[10px]">{cve}</span>
@@ -226,17 +226,17 @@ function FeedContent() {
                 disabled={page <= 1}
                 className="btn-secondary text-sm disabled:opacity-30"
               >
-                Previous
+                Anterior
               </button>
               <span className="flex items-center text-sm text-gray-400">
-                Page {page} of {totalPages}
+                Página {page} de {totalPages}
               </span>
               <button
                 onClick={() => fetchItems(page + 1)}
                 disabled={page >= totalPages}
                 className="btn-secondary text-sm disabled:opacity-30"
               >
-                Next
+                Próximo
               </button>
             </div>
           )}
@@ -248,7 +248,7 @@ function FeedContent() {
 
 export default function FeedPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Loading...</div></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Carregando...</div></div>}>
       <FeedContent />
     </Suspense>
   );

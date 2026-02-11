@@ -53,7 +53,7 @@ export class SourcesService {
 
   async findById(id: string) {
     const source = await this.sourceRepo.findOne({ where: { id }, relations: ['categories'] });
-    if (!source) throw new NotFoundException('Source not found');
+    if (!source) throw new NotFoundException('Fonte não encontrada');
     return source;
   }
 
@@ -98,7 +98,7 @@ export class SourcesService {
     const source = await this.findById(id);
     await this.ingestQueue.add(JOB_NAMES.FETCH_SOURCE, { sourceId: source.id });
     await this.auditService.log(actorId, 'SOURCE_FETCH_TRIGGERED', 'source', id);
-    return { message: 'Fetch queued' };
+    return { message: 'Coleta enfileirada' };
   }
 
   getDecryptedAuth(source: Source): Record<string, string> | null {

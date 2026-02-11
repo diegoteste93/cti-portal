@@ -59,7 +59,7 @@ export class AuthService {
       };
     } catch (err) {
       this.logger.warn(`Google token validation failed: ${err}`);
-      throw new UnauthorizedException('Invalid Google token');
+      throw new UnauthorizedException('Token do Google inválido');
     }
 
     // Domain validation
@@ -71,11 +71,11 @@ export class AuthService {
           email: payload.email,
           domain: emailDomain,
         });
-        throw new UnauthorizedException('Email domain not authorized');
+        throw new UnauthorizedException('Domínio de email não autorizado');
       }
       if (payload.hd && !this.allowedDomains.includes(payload.hd.toLowerCase())) {
         this.logger.warn(`HD claim not allowed: ${payload.hd} for ${payload.email}`);
-        throw new UnauthorizedException('Organization domain not authorized');
+        throw new UnauthorizedException('Domínio da organização não autorizado');
       }
     }
 
@@ -97,7 +97,7 @@ export class AuthService {
       this.logger.log(`JIT provisioned user: ${payload.email}`);
       await this.auditService.log(user.id, 'USER_JIT_CREATED', 'user', user.id);
     } else if (user.status === UserStatus.INACTIVE) {
-      throw new UnauthorizedException('User account is deactivated');
+      throw new UnauthorizedException('Conta de usuário desativada');
     }
 
     // Update last login
@@ -119,7 +119,7 @@ export class AuthService {
 
   async devLogin(email: string): Promise<{ accessToken: string; user: User }> {
     if (this.config.get('NODE_ENV') === 'production') {
-      throw new UnauthorizedException('Dev login is disabled in production');
+      throw new UnauthorizedException('Login dev desativado em produção');
     }
 
     this.logger.warn(`DEV LOGIN used for: ${email}`);
@@ -130,11 +130,11 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found. Run seed first: npm run db:seed');
+      throw new UnauthorizedException('Usuário não encontrado. Execute o seed primeiro: npm run db:seed');
     }
 
     if (user.status === UserStatus.INACTIVE) {
-      throw new UnauthorizedException('User account is deactivated');
+      throw new UnauthorizedException('Conta de usuário desativada');
     }
 
     user.lastLoginAt = new Date();

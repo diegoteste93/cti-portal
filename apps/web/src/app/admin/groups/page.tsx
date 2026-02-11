@@ -54,16 +54,16 @@ export default function GroupsPage() {
   };
 
   if (authLoading || !user) return null;
-  if (!isAdmin(user)) return <div className="p-8 text-red-400">Access denied</div>;
+  if (!isAdmin(user)) return <div className="p-8 text-red-400">Acesso negado</div>;
 
   return (
     <div className="flex min-h-screen">
       <Sidebar user={user} />
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-6">Groups & Policies</h2>
+        <h2 className="text-2xl font-bold mb-6">Grupos e Políticas</h2>
         <div className="space-y-4">
           {loading ? (
-            <div className="text-gray-500">Loading...</div>
+            <div className="text-gray-500">Carregando...</div>
           ) : (
             groups.map((group) => (
               <div key={group.id} className="card">
@@ -73,31 +73,31 @@ export default function GroupsPage() {
                     {group.description && <p className="text-sm text-gray-400">{group.description}</p>}
                   </div>
                   <button onClick={() => startEditPolicy(group)} className="btn-secondary text-xs">
-                    Edit Policy
+                    Editar Política
                   </button>
                 </div>
 
                 {editingPolicy === group.id ? (
                   <div className="space-y-3 pt-3 border-t border-gray-800">
                     <div>
-                      <label className="text-xs text-gray-400">Followed Tags (comma-separated)</label>
+                      <label className="text-xs text-gray-400">Tags Seguidas (separadas por vírgula)</label>
                       <input value={policyForm.tags} onChange={(e) => setPolicyForm({...policyForm, tags: e.target.value})} className="input-field" />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400">Followed Categories (comma-separated slugs)</label>
+                      <label className="text-xs text-gray-400">Categorias Seguidas (slugs separados por vírgula)</label>
                       <input value={policyForm.categories} onChange={(e) => setPolicyForm({...policyForm, categories: e.target.value})} className="input-field" />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400">Keywords Include</label>
+                      <label className="text-xs text-gray-400">Palavras-chave Incluir</label>
                       <input value={policyForm.include} onChange={(e) => setPolicyForm({...policyForm, include: e.target.value})} className="input-field" />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400">Keywords Exclude</label>
+                      <label className="text-xs text-gray-400">Palavras-chave Excluir</label>
                       <input value={policyForm.exclude} onChange={(e) => setPolicyForm({...policyForm, exclude: e.target.value})} className="input-field" />
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => savePolicy(group.id)} className="btn-primary text-xs">Save</button>
-                      <button onClick={() => setEditingPolicy(null)} className="btn-secondary text-xs">Cancel</button>
+                      <button onClick={() => savePolicy(group.id)} className="btn-primary text-xs">Salvar</button>
+                      <button onClick={() => setEditingPolicy(null)} className="btn-secondary text-xs">Cancelar</button>
                     </div>
                   </div>
                 ) : group.policy ? (
@@ -110,15 +110,15 @@ export default function GroupsPage() {
                     )}
                     {group.policy.followedCategories.length > 0 && (
                       <div>
-                        <span className="text-xs text-gray-500">Categories: </span>
+                        <span className="text-xs text-gray-500">Categorias: </span>
                         {group.policy.followedCategories.map((c) => <span key={c} className="badge badge-category text-[10px] mr-1">{c}</span>)}
                       </div>
                     )}
                     {group.policy.keywordsInclude.length > 0 && (
-                      <div><span className="text-xs text-gray-500">Keywords Include: </span><span className="text-xs text-gray-300">{group.policy.keywordsInclude.join(', ')}</span></div>
+                      <div><span className="text-xs text-gray-500">Palavras-chave Incluir: </span><span className="text-xs text-gray-300">{group.policy.keywordsInclude.join(', ')}</span></div>
                     )}
                     {group.policy.keywordsExclude.length > 0 && (
-                      <div><span className="text-xs text-gray-500">Keywords Exclude: </span><span className="text-xs text-gray-300">{group.policy.keywordsExclude.join(', ')}</span></div>
+                      <div><span className="text-xs text-gray-500">Palavras-chave Excluir: </span><span className="text-xs text-gray-300">{group.policy.keywordsExclude.join(', ')}</span></div>
                     )}
                   </div>
                 ) : null}

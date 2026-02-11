@@ -53,7 +53,7 @@ export default function UsersPage() {
   };
 
   if (authLoading || !user) return null;
-  if (!isAdmin(user)) return <div className="p-8 text-red-400">Access denied</div>;
+  if (!isAdmin(user)) return <div className="p-8 text-red-400">Acesso negado</div>;
 
   const roleColors: Record<string, string> = {
     admin: 'badge-critical',
@@ -66,10 +66,10 @@ export default function UsersPage() {
     <div className="flex min-h-screen">
       <Sidebar user={user} />
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-6">Users ({total})</h2>
+        <h2 className="text-2xl font-bold mb-6">Usuários ({total})</h2>
         <div className="space-y-3">
           {loading ? (
-            <div className="text-gray-500">Loading...</div>
+            <div className="text-gray-500">Carregando...</div>
           ) : (
             users.map((u) => (
               <div key={u.id} className="card">
@@ -91,21 +91,21 @@ export default function UsersPage() {
                       onChange={(e) => handleRoleChange(u.id, e.target.value)}
                       className="input-field w-auto text-xs"
                     >
-                      <option value="viewer">Viewer</option>
-                      <option value="group_manager">Group Manager</option>
-                      <option value="cti_editor">CTI Editor</option>
+                      <option value="viewer">Visualizador</option>
+                      <option value="group_manager">Gerente de Grupo</option>
+                      <option value="cti_editor">Editor CTI</option>
                       <option value="admin">Admin</option>
                     </select>
                     <button
                       onClick={() => handleStatusToggle(u.id, u.status)}
                       className={`text-xs px-3 py-1 rounded ${u.status === 'active' ? 'btn-danger' : 'btn-primary'}`}
                     >
-                      {u.status === 'active' ? 'Deactivate' : 'Activate'}
+                      {u.status === 'active' ? 'Desativar' : 'Ativar'}
                     </button>
                   </div>
                 </div>
                 <div className="mt-3 pt-3 border-t border-gray-800">
-                  <p className="text-xs text-gray-500 mb-2">Groups:</p>
+                  <p className="text-xs text-gray-500 mb-2">Grupos:</p>
                   <div className="flex flex-wrap gap-2">
                     {groups.map((g) => {
                       const isMember = u.groups.some((ug) => ug.id === g.id);

@@ -18,7 +18,7 @@ export class GroupsService {
 
   async findById(id: string) {
     const group = await this.groupRepo.findOne({ where: { id }, relations: ['policy', 'users'] });
-    if (!group) throw new NotFoundException('Group not found');
+    if (!group) throw new NotFoundException('Grupo não encontrado');
     return group;
   }
 

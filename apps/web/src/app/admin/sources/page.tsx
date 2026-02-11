@@ -59,20 +59,20 @@ export default function SourcesPage() {
 
   const handleFetch = async (id: string) => {
     await api.post(`/sources/${id}/fetch`);
-    alert('Fetch job queued successfully');
+    alert('Coleta enfileirada com sucesso');
   };
 
   if (authLoading || !user) return null;
-  if (!isAdmin(user) && !isEditor(user)) return <div className="p-8 text-red-400">Access denied</div>;
+  if (!isAdmin(user) && !isEditor(user)) return <div className="p-8 text-red-400">Acesso negado</div>;
 
   return (
     <div className="flex min-h-screen">
       <Sidebar user={user} />
       <main className="flex-1 p-8 overflow-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Sources ({total})</h2>
+          <h2 className="text-2xl font-bold">Fontes ({total})</h2>
           <button onClick={() => setShowForm(!showForm)} className="btn-primary">
-            {showForm ? 'Cancel' : '+ Add Source'}
+            {showForm ? 'Cancelar' : '+ Adicionar Fonte'}
           </button>
         </div>
 
@@ -80,16 +80,16 @@ export default function SourcesPage() {
           <form onSubmit={handleCreate} className="card mb-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Name</label>
+                <label className="block text-sm text-gray-400 mb-1">Nome</label>
                 <input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="input-field" required />
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Type</label>
+                <label className="block text-sm text-gray-400 mb-1">Tipo</label>
                 <select value={form.type} onChange={(e) => setForm({...form, type: e.target.value})} className="input-field">
                   <option value="rss">RSS</option>
-                  <option value="generic_api">Generic API (JSON)</option>
+                  <option value="generic_api">API Genérica (JSON)</option>
                   <option value="github_releases">GitHub Advisory</option>
-                  <option value="html_scrape">HTML Scraper</option>
+                  <option value="html_scrape">Raspador HTML</option>
                 </select>
               </div>
               <div>
@@ -97,12 +97,12 @@ export default function SourcesPage() {
                 <input value={form.url} onChange={(e) => setForm({...form, url: e.target.value})} className="input-field" required />
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Schedule (cron)</label>
+                <label className="block text-sm text-gray-400 mb-1">Agendamento (cron)</label>
                 <input value={form.scheduleCron} onChange={(e) => setForm({...form, scheduleCron: e.target.value})} className="input-field" />
               </div>
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Categories</label>
+              <label className="block text-sm text-gray-400 mb-1">Categorias</label>
               <div className="flex flex-wrap gap-2">
                 {categories.map((c) => (
                   <label key={c.id} className="flex items-center gap-1 text-sm">
@@ -119,15 +119,15 @@ export default function SourcesPage() {
                 ))}
               </div>
             </div>
-            <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Create Source'}</button>
+            <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Salvando...' : 'Criar Fonte'}</button>
           </form>
         )}
 
         <div className="space-y-3">
           {loading ? (
-            <div className="text-gray-500">Loading...</div>
+            <div className="text-gray-500">Carregando...</div>
           ) : sources.length === 0 ? (
-            <div className="card text-center py-8 text-gray-500">No sources configured yet.</div>
+            <div className="card text-center py-8 text-gray-500">Nenhuma fonte configurada ainda.</div>
           ) : (
             sources.map((source) => (
               <div key={source.id} className="card flex items-center justify-between">
@@ -146,9 +146,9 @@ export default function SourcesPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => handleFetch(source.id)} className="btn-secondary text-xs">Fetch Now</button>
+                  <button onClick={() => handleFetch(source.id)} className="btn-secondary text-xs">Coletar Agora</button>
                   <button onClick={() => handleToggle(source.id, source.enabled)} className={`text-xs px-3 py-1 rounded ${source.enabled ? 'btn-danger' : 'btn-primary'}`}>
-                    {source.enabled ? 'Disable' : 'Enable'}
+                    {source.enabled ? 'Desativar' : 'Ativar'}
                   </button>
                 </div>
               </div>

@@ -17,7 +17,7 @@ export class CategoriesService {
 
   async findById(id: string) {
     const cat = await this.catRepo.findOneBy({ id });
-    if (!cat) throw new NotFoundException('Category not found');
+    if (!cat) throw new NotFoundException('Categoria não encontrada');
     return cat;
   }
 

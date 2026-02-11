@@ -43,7 +43,7 @@ export default function ItemDetailPage() {
     }
   }, [user, params.id]);
 
-  if (authLoading || !user) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Loading...</div></div>;
+  if (authLoading || !user) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Carregando...</div></div>;
 
   const splitField = (val: string | undefined) => val ? val.split(',').filter(Boolean) : [];
 
@@ -52,11 +52,11 @@ export default function ItemDetailPage() {
       <Sidebar user={user} />
       <main className="flex-1 p-8 overflow-auto">
         <button onClick={() => router.back()} className="text-sm text-cti-accent hover:underline mb-4">
-          &larr; Back to Feed
+          &larr; Voltar ao Feed
         </button>
 
         {loading ? (
-          <div className="text-gray-500">Loading...</div>
+          <div className="text-gray-500">Carregando...</div>
         ) : error ? (
           <div className="card border-red-800">
             <p className="text-red-400">{error}</p>
@@ -70,9 +70,9 @@ export default function ItemDetailPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400 mb-4">
-                <span>Source: <strong>{item.source?.name || 'Unknown'}</strong></span>
-                <span>Collected: {new Date(item.collectedAt).toLocaleString()}</span>
-                {item.publishedAt && <span>Published: {new Date(item.publishedAt).toLocaleString()}</span>}
+                <span>Fonte: <strong>{item.source?.name || 'Desconhecido'}</strong></span>
+                <span>Coletado: {new Date(item.collectedAt).toLocaleString()}</span>
+                {item.publishedAt && <span>Publicado: {new Date(item.publishedAt).toLocaleString()}</span>}
                 <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-cti-accent hover:underline">
                   Original &rarr;
                 </a>
@@ -88,7 +88,7 @@ export default function ItemDetailPage() {
               {/* Summary */}
               {item.summary && (
                 <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-gray-400 mb-1">Summary</h3>
+                  <h3 className="text-sm font-semibold text-gray-400 mb-1">Resumo</h3>
                   <p className="text-gray-300">{item.summary}</p>
                 </div>
               )}
@@ -96,7 +96,7 @@ export default function ItemDetailPage() {
               {/* Content */}
               {item.content && (
                 <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-gray-400 mb-1">Content</h3>
+                  <h3 className="text-sm font-semibold text-gray-400 mb-1">Conteúdo</h3>
                   <div className="prose prose-invert max-w-none text-sm text-gray-300 whitespace-pre-wrap">
                     {item.content}
                   </div>
@@ -138,7 +138,7 @@ export default function ItemDetailPage() {
 
               {splitField(item.tags).length > 0 && (
                 <div className="card">
-                  <h3 className="text-sm font-semibold text-gray-400 mb-2">Technologies</h3>
+                  <h3 className="text-sm font-semibold text-gray-400 mb-2">Tecnologias</h3>
                   <div className="flex flex-wrap gap-2">
                     {splitField(item.tags).map((tag) => (
                       <Link key={tag} href={`/feed?tags=${tag}`} className="badge badge-tag hover:opacity-80">{tag}</Link>
@@ -149,7 +149,7 @@ export default function ItemDetailPage() {
 
               {(splitField(item.vendors).length > 0 || splitField(item.products).length > 0) && (
                 <div className="card">
-                  <h3 className="text-sm font-semibold text-gray-400 mb-2">Vendors & Products</h3>
+                  <h3 className="text-sm font-semibold text-gray-400 mb-2">Fornecedores e Produtos</h3>
                   <div className="flex flex-wrap gap-2">
                     {splitField(item.vendors).map((v) => (
                       <span key={v} className="badge bg-indigo-900 text-indigo-200">{v}</span>

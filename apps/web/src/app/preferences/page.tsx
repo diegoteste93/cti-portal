@@ -19,15 +19,15 @@ const AVAILABLE_TAGS = [
 ];
 
 const AVAILABLE_CATEGORIES = [
-  { slug: 'vulnerability', name: 'Vulnerabilities' },
-  { slug: 'exploit', name: 'Exploits & Attacks' },
+  { slug: 'vulnerability', name: 'Vulnerabilidades' },
+  { slug: 'exploit', name: 'Exploits e Ataques' },
   { slug: 'ransomware', name: 'Ransomware' },
-  { slug: 'fraud', name: 'Fraud' },
-  { slug: 'data_leak', name: 'Data Leaks' },
+  { slug: 'fraud', name: 'Fraude' },
+  { slug: 'data_leak', name: 'Vazamentos de Dados' },
   { slug: 'malware', name: 'Malware' },
   { slug: 'phishing', name: 'Phishing' },
-  { slug: 'supply_chain', name: 'Supply Chain' },
-  { slug: 'general', name: 'General' },
+  { slug: 'supply_chain', name: 'Cadeia de Suprimentos' },
+  { slug: 'general', name: 'Geral' },
 ];
 
 export default function PreferencesPage() {
@@ -95,31 +95,31 @@ export default function PreferencesPage() {
     <div className="flex min-h-screen">
       <Sidebar user={user} />
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-2">My Feed Preferences</h2>
+        <h2 className="text-2xl font-bold mb-2">Preferências do Meu Feed</h2>
         <p className="text-sm text-gray-400 mb-6">
-          Customize your personalized feed. These preferences are merged with your group policies.
+          Personalize seu feed. Essas preferências são combinadas com as políticas dos seus grupos.
         </p>
 
         {loading ? (
-          <div className="text-gray-500">Loading...</div>
+          <div className="text-gray-500">Carregando...</div>
         ) : (
           <div className="max-w-3xl space-y-6">
             {/* Groups info */}
             {user.groups.length > 0 && (
               <div className="card bg-cti-accent/5 border-cti-accent/20">
-                <h3 className="text-sm font-semibold mb-2">Your Groups</h3>
+                <h3 className="text-sm font-semibold mb-2">Seus Grupos</h3>
                 <div className="flex flex-wrap gap-2">
                   {user.groups.map((g) => (
                     <span key={g.id} className="badge bg-cti-accent/20 text-cti-accent">{g.name}</span>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">Group policies are automatically applied to your feed.</p>
+                <p className="text-xs text-gray-500 mt-2">As políticas de grupo são aplicadas automaticamente ao seu feed.</p>
               </div>
             )}
 
             {/* Technologies */}
             <div className="card">
-              <h3 className="text-sm font-semibold mb-3">Technologies</h3>
+              <h3 className="text-sm font-semibold mb-3">Tecnologias</h3>
               <div className="flex flex-wrap gap-2">
                 {AVAILABLE_TAGS.map((tag) => (
                   <button
@@ -139,7 +139,7 @@ export default function PreferencesPage() {
 
             {/* Categories */}
             <div className="card">
-              <h3 className="text-sm font-semibold mb-3">Categories</h3>
+              <h3 className="text-sm font-semibold mb-3">Categorias</h3>
               <div className="flex flex-wrap gap-2">
                 {AVAILABLE_CATEGORIES.map((cat) => (
                   <button
@@ -159,24 +159,24 @@ export default function PreferencesPage() {
 
             {/* Keywords */}
             <div className="card">
-              <h3 className="text-sm font-semibold mb-3">Keywords</h3>
+              <h3 className="text-sm font-semibold mb-3">Palavras-chave</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs text-gray-400">Include (comma-separated)</label>
+                  <label className="text-xs text-gray-400">Incluir (separado por vírgula)</label>
                   <input
                     value={kwInclude}
                     onChange={(e) => { setKwInclude(e.target.value); setSaved(false); }}
                     className="input-field"
-                    placeholder="e.g. log4j, spring boot, react native"
+                    placeholder="ex. log4j, spring boot, react native"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400">Exclude (comma-separated)</label>
+                  <label className="text-xs text-gray-400">Excluir (separado por vírgula)</label>
                   <input
                     value={kwExclude}
                     onChange={(e) => { setKwExclude(e.target.value); setSaved(false); }}
                     className="input-field"
-                    placeholder="e.g. wordpress, drupal"
+                    placeholder="ex. wordpress, drupal"
                   />
                 </div>
               </div>
@@ -184,9 +184,9 @@ export default function PreferencesPage() {
 
             <div className="flex items-center gap-3">
               <button onClick={handleSave} className="btn-primary" disabled={saving}>
-                {saving ? 'Saving...' : 'Save Preferences'}
+                {saving ? 'Salvando...' : 'Salvar Preferências'}
               </button>
-              {saved && <span className="text-sm text-green-400">Preferences saved!</span>}
+              {saved && <span className="text-sm text-green-400">Preferências salvas!</span>}
             </div>
           </div>
         )}

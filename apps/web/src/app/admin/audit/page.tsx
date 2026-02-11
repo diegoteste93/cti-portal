@@ -39,16 +39,16 @@ export default function AuditPage() {
   };
 
   if (authLoading || !user) return null;
-  if (!isAdmin(user)) return <div className="p-8 text-red-400">Access denied</div>;
+  if (!isAdmin(user)) return <div className="p-8 text-red-400">Acesso negado</div>;
 
   return (
     <div className="flex min-h-screen">
       <Sidebar user={user} />
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-6">Audit Log ({total})</h2>
+        <h2 className="text-2xl font-bold mb-6">Log de Auditoria ({total})</h2>
         <div className="space-y-2">
           {loading ? (
-            <div className="text-gray-500">Loading...</div>
+            <div className="text-gray-500">Carregando...</div>
           ) : (
             logs.map((log) => (
               <div key={log.id} className="card py-3 flex items-center justify-between">
@@ -59,7 +59,7 @@ export default function AuditPage() {
                     {log.objectId && <span className="text-xs text-gray-600 font-mono">{log.objectId.slice(0, 8)}</span>}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    {log.actor?.name || log.actor?.email || 'System'} &middot; {new Date(log.timestamp).toLocaleString()}
+                    {log.actor?.name || log.actor?.email || 'Sistema'} &middot; {new Date(log.timestamp).toLocaleString()}
                   </p>
                 </div>
                 {log.diffJson && (

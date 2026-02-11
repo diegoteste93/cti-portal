@@ -30,18 +30,18 @@ export default function DashboardPage() {
     }
   }, [user]);
 
-  if (loading || !user) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Loading...</div></div>;
+  if (loading || !user) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Carregando...</div></div>;
 
   const categoryLabels: Record<string, string> = {
-    vulnerability: 'Vulnerabilities',
-    exploit: 'Exploits & Attacks',
+    vulnerability: 'Vulnerabilidades',
+    exploit: 'Exploits e Ataques',
     ransomware: 'Ransomware',
-    fraud: 'Fraud',
-    data_leak: 'Data Leaks',
+    fraud: 'Fraude',
+    data_leak: 'Vazamentos de Dados',
     malware: 'Malware',
     phishing: 'Phishing',
-    supply_chain: 'Supply Chain',
-    general: 'General',
+    supply_chain: 'Cadeia de Suprimentos',
+    general: 'Geral',
   };
 
   const categoryColors: Record<string, string> = {
@@ -60,24 +60,24 @@ export default function DashboardPage() {
     <div className="flex min-h-screen">
       <Sidebar user={user} />
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
+        <h2 className="text-2xl font-bold mb-6">Painel</h2>
 
         {loadingStats ? (
-          <div className="text-gray-500">Loading statistics...</div>
+          <div className="text-gray-500">Carregando estatísticas...</div>
         ) : stats ? (
           <>
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <div className="card">
-                <p className="text-sm text-gray-400">Total Items</p>
+                <p className="text-sm text-gray-400">Total de Itens</p>
                 <p className="text-3xl font-bold text-cti-accent">{stats.totalItems.toLocaleString()}</p>
               </div>
               <div className="card">
-                <p className="text-sm text-gray-400">Today</p>
+                <p className="text-sm text-gray-400">Hoje</p>
                 <p className="text-3xl font-bold text-cti-green">{stats.itemsToday}</p>
               </div>
               <div className="card">
-                <p className="text-sm text-gray-400">This Week</p>
+                <p className="text-sm text-gray-400">Esta Semana</p>
                 <p className="text-3xl font-bold text-cti-amber">{stats.itemsThisWeek}</p>
               </div>
             </div>
@@ -85,7 +85,7 @@ export default function DashboardPage() {
             {/* Category breakdown */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="card">
-                <h3 className="text-lg font-semibold mb-4">By Category</h3>
+                <h3 className="text-lg font-semibold mb-4">Por Categoria</h3>
                 <div className="space-y-2">
                   {Object.entries(stats.byCategoryCount).map(([slug, count]) => (
                     <div key={slug} className={`flex justify-between items-center p-2 rounded border ${categoryColors[slug] || 'bg-gray-800 border-gray-700'}`}>
@@ -99,7 +99,7 @@ export default function DashboardPage() {
               <div className="space-y-6">
                 {stats.topCves.length > 0 && (
                   <div className="card">
-                    <h3 className="text-lg font-semibold mb-3">Trending CVEs</h3>
+                    <h3 className="text-lg font-semibold mb-3">CVEs em Destaque</h3>
                     <div className="flex flex-wrap gap-2">
                       {stats.topCves.map((cve) => (
                         <Link
@@ -116,7 +116,7 @@ export default function DashboardPage() {
 
                 {stats.topTags.length > 0 && (
                   <div className="card">
-                    <h3 className="text-lg font-semibold mb-3">Top Technologies</h3>
+                    <h3 className="text-lg font-semibold mb-3">Principais Tecnologias</h3>
                     <div className="flex flex-wrap gap-2">
                       {stats.topTags.map((tag) => (
                         <Link
@@ -136,8 +136,8 @@ export default function DashboardPage() {
             {/* Recent items */}
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Recent Items</h3>
-                <Link href="/feed" className="text-sm text-cti-accent hover:underline">View all</Link>
+                <h3 className="text-lg font-semibold">Itens Recentes</h3>
+                <Link href="/feed" className="text-sm text-cti-accent hover:underline">Ver todos</Link>
               </div>
               <div className="space-y-3">
                 {stats.recentItems.map((item: any) => (
@@ -150,7 +150,7 @@ export default function DashboardPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{item.title}</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {item.source?.name || 'Unknown'} &middot; {new Date(item.collectedAt).toLocaleString()}
+                          {item.source?.name || 'Desconhecido'} &middot; {new Date(item.collectedAt).toLocaleString()}
                         </p>
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
@@ -164,14 +164,14 @@ export default function DashboardPage() {
                 ))}
                 {stats.recentItems.length === 0 && (
                   <p className="text-gray-500 text-sm text-center py-8">
-                    No items yet. Configure sources to start ingesting threat intelligence data.
+                    Nenhum item ainda. Configure fontes para começar a coletar dados de inteligência de ameaças.
                   </p>
                 )}
               </div>
             </div>
           </>
         ) : (
-          <div className="text-red-400">Failed to load dashboard data.</div>
+          <div className="text-red-400">Falha ao carregar dados do painel.</div>
         )}
       </main>
     </div>

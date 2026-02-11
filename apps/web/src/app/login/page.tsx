@@ -19,7 +19,7 @@ export default function LoginPage() {
       const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=id_token&scope=${scope}&nonce=${Date.now()}`;
       window.location.href = url;
     } else {
-      setError('Google Client ID not configured. Use dev login below.');
+      setError('Google Client ID não configurado. Use o login dev abaixo.');
     }
   };
 
@@ -31,7 +31,7 @@ export default function LoginPage() {
       await refresh();
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'Falha no login');
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ export default function LoginPage() {
         <div className="card text-center">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-cti-accent mb-2">CTI Portal</h1>
-            <p className="text-gray-400 text-sm">Cyber Threat Intelligence Platform</p>
+            <p className="text-gray-400 text-sm">Plataforma de Inteligência de Ameaças Cibernéticas</p>
           </div>
 
           {error && (
@@ -64,14 +64,14 @@ export default function LoginPage() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            {loading ? 'Signing in...' : 'Sign in with Google'}
+            {loading ? 'Entrando...' : 'Entrar com Google'}
           </button>
 
           {/* Dev Login */}
           <div className="mt-6 pt-4 border-t border-gray-800">
             <div className="flex items-center gap-2 justify-center mb-3">
               <span className="badge bg-amber-900 text-amber-200">DEV</span>
-              <span className="text-xs text-gray-500">Quick login (development only)</span>
+              <span className="text-xs text-gray-500">Login rápido (apenas desenvolvimento)</span>
             </div>
             <div className="space-y-2">
               <input
@@ -89,13 +89,13 @@ export default function LoginPage() {
                 {loading ? 'Entrando...' : 'Entrar como Dev'}
               </button>
               <p className="text-[10px] text-gray-600 mt-1">
-                Default admin: admin@ctiportal.local (criado pelo seed)
+                Admin padrão: admin@ctiportal.local (criado pelo seed)
               </p>
             </div>
           </div>
 
           <p className="mt-6 text-xs text-gray-600">
-            Access restricted to authorized domains only.
+            Acesso restrito apenas a domínios autorizados.
           </p>
         </div>
       </div>

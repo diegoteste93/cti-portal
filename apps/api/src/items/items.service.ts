@@ -84,7 +84,7 @@ export class ItemsService {
       where: { id },
       relations: ['categories', 'source'],
     });
-    if (!item) throw new NotFoundException('Item not found');
+    if (!item) throw new NotFoundException('Item não encontrado');
 
     // Check visibility
     if (item.visibilityScope === VisibilityScope.GROUPS) {
@@ -92,7 +92,7 @@ export class ItemsService {
       const itemGroupIds = item.visibilityGroupIds || [];
       const hasAccess = itemGroupIds.some((gid) => userGroupIds.includes(gid));
       if (!hasAccess && user.role !== 'admin') {
-        throw new ForbiddenException('Access denied');
+        throw new ForbiddenException('Acesso negado');
       }
     }
     return item;

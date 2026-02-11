@@ -33,7 +33,7 @@ export class AuthController {
   @Post('dev-login')
   async devLogin(@Body() dto: DevLoginDto) {
     if (this.config.get('NODE_ENV') === 'production') {
-      throw new UnauthorizedException('Not available in production');
+      throw new UnauthorizedException('Não disponível em produção');
     }
     return this.authService.devLogin(dto.email);
   }
