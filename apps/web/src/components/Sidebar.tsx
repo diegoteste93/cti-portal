@@ -4,17 +4,17 @@ import { usePathname } from 'next/navigation';
 import { AuthUser, isAdmin, isEditor, logout } from '@/lib/auth';
 
 const nav = [
-  { href: '/dashboard', label: 'Dashboard', icon: '□' },
+  { href: '/dashboard', label: 'Painel', icon: '□' },
   { href: '/feed', label: 'Feed', icon: '◈' },
-  { href: '/preferences', label: 'My Feed', icon: '☆' },
+  { href: '/preferences', label: 'Meu Feed', icon: '☆' },
 ];
 
 const adminNav = [
-  { href: '/admin/sources', label: 'Sources', icon: '⊕' },
-  { href: '/admin/categories', label: 'Categories', icon: '≡' },
-  { href: '/admin/users', label: 'Users', icon: '⊙' },
-  { href: '/admin/groups', label: 'Groups', icon: '⊞' },
-  { href: '/admin/audit', label: 'Audit Log', icon: '◎' },
+  { href: '/admin/sources', label: 'Fontes', icon: '⊕' },
+  { href: '/admin/categories', label: 'Categorias', icon: '≡' },
+  { href: '/admin/users', label: 'Usuários', icon: '⊙' },
+  { href: '/admin/groups', label: 'Grupos', icon: '⊞' },
+  { href: '/admin/audit', label: 'Log de Auditoria', icon: '◎' },
 ];
 
 export default function Sidebar({ user }: { user: AuthUser }) {
@@ -24,7 +24,7 @@ export default function Sidebar({ user }: { user: AuthUser }) {
     <aside className="w-64 bg-gray-900 border-r border-gray-800 min-h-screen flex flex-col">
       <div className="p-6 border-b border-gray-800">
         <h1 className="text-xl font-bold text-cti-accent">CTI Portal</h1>
-        <p className="text-xs text-gray-500 mt-1">Threat Intelligence</p>
+        <p className="text-xs text-gray-500 mt-1">Inteligência de Ameaças</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
@@ -51,7 +51,7 @@ export default function Sidebar({ user }: { user: AuthUser }) {
               </span>
             </div>
             {adminNav.map((item) => {
-              if (['Users', 'Groups', 'Audit Log'].includes(item.label) && !isAdmin(user)) return null;
+              if (['Usuários', 'Grupos', 'Log de Auditoria'].includes(item.label) && !isAdmin(user)) return null;
               return (
                 <Link
                   key={item.href}
@@ -85,7 +85,7 @@ export default function Sidebar({ user }: { user: AuthUser }) {
           onClick={logout}
           className="mt-3 w-full text-left text-xs text-gray-500 hover:text-red-400 transition-colors"
         >
-          Sign out
+          Sair
         </button>
       </div>
     </aside>
