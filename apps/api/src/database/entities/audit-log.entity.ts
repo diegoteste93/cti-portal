@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 
 @Entity('audit_logs')
@@ -10,6 +10,7 @@ export class AuditLog {
   actorUserId: string;
 
   @ManyToOne(() => User, (user) => user.auditLogs, { nullable: true })
+  @JoinColumn({ name: 'actorUserId' })
   actor: User;
 
   @Column()
