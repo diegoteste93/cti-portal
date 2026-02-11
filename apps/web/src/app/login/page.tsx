@@ -89,7 +89,7 @@ export default function LoginPage() {
                 {loading ? 'Entrando...' : 'Entrar como Dev'}
               </button>
               <p className="text-[10px] text-gray-600 mt-1">
-                Admin padrão: admin@ctiportal.local (criado pelo seed)
+                Administrador padrão: admin@ctiportal.local (criado pelo seed inicial)
               </p>
             </div>
           </div>

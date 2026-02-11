@@ -47,7 +47,7 @@ export default function Sidebar({ user }: { user: AuthUser }) {
           <>
             <div className="pt-4 pb-2">
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Admin
+                Administração
               </span>
             </div>
             {adminNav.map((item) => {

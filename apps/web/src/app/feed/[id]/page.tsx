@@ -22,7 +22,7 @@ interface ItemDetail {
   vendors: string;
   products: string;
   source?: { id: string; name: string };
-  categories: { id: string; name: string; slug: string }[];
+  categories?: { id: string; name: string; slug: string }[];
   rawJson?: any;
 }
 
@@ -74,13 +74,13 @@ export default function ItemDetailPage() {
                 <span>Coletado: {new Date(item.collectedAt).toLocaleString()}</span>
                 {item.publishedAt && <span>Publicado: {new Date(item.publishedAt).toLocaleString()}</span>}
                 <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-cti-accent hover:underline">
-                  Original &rarr;
+                  Fonte original &rarr;
                 </a>
               </div>
 
               {/* Categories */}
               <div className="flex flex-wrap gap-2 mb-4">
-                {item.categories.map((c) => (
+                {(item.categories || []).map((c) => (
                   <span key={c.id} className="badge badge-category">{c.name}</span>
                 ))}
               </div>
