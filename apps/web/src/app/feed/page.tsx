@@ -53,8 +53,14 @@ function FeedContent() {
   const [severity, setSeverity] = useState(searchParams.get('severity') || '');
   const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || '');
   const [dateTo, setDateTo] = useState(searchParams.get('dateTo') || '');
+  const [onlyBrazil, setOnlyBrazil] = useState(searchParams.get('br') === '1');
   const [usePersonalized, setUsePersonalized] = useState(true);
   const [categories, setCategories] = useState<{id: string; name: string; slug: string}[]>([]);
+
+  const brazilSearchClause = '(Brasil OR brasileiro OR brasileira OR LGPD OR ANPD OR gov.br OR pix OR CPF OR CNPJ)';
+  const effectiveSearch = onlyBrazil
+    ? (search ? `(${search}) AND ${brazilSearchClause}` : brazilSearchClause)
+    : search;
 
   useEffect(() => {
     if (user) {
@@ -66,17 +72,18 @@ function FeedContent() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (search) params.set('search', search);
+      if (effectiveSearch) params.set('search', effectiveSearch);
       if (category) params.set('categories', category);
       if (tag) params.set('tags', tag);
       if (cve) params.set('cve', cve);
       if (severity) params.set('severity', severity);
       if (dateFrom) params.set('dateFrom', dateFrom);
       if (dateTo) params.set('dateTo', dateTo);
+      if (onlyBrazil) params.set('br', '1');
       params.set('page', String(p));
       params.set('limit', '20');
 
-      const endpoint = usePersonalized && !search && !category && !tag && !cve && !severity
+      const endpoint = usePersonalized && !effectiveSearch && !category && !tag && !cve && !severity
         ? '/feed'
         : '/items';
 
@@ -90,7 +97,7 @@ function FeedContent() {
     } finally {
       setLoading(false);
     }
-  }, [search, category, tag, cve, severity, dateFrom, dateTo, usePersonalized]);
+  }, [effectiveSearch, category, tag, cve, severity, dateFrom, dateTo, onlyBrazil, usePersonalized]);
 
   useEffect(() => {
     if (user) fetchItems();
@@ -106,6 +113,16 @@ function FeedContent() {
   const clearFilters = () => {
     setSearch(''); setCategory(''); setTag(''); setCve(''); setSeverity('');
     setDateFrom(''); setDateTo('');
+    setOnlyBrazil(false);
+  };
+
+  const toggleBrazilOnly = () => {
+    const next = !onlyBrazil;
+    setOnlyBrazil(next);
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (next) nextParams.set('br', '1');
+    else nextParams.delete('br');
+    router.replace(`/feed?${nextParams.toString()}`);
   };
 
   return (
@@ -128,6 +145,18 @@ function FeedContent() {
             </div>
 
             <div className="flex flex-wrap gap-3 items-center">
+              <button
+                type="button"
+                onClick={toggleBrazilOnly}
+                className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                  onlyBrazil
+                    ? 'bg-green-900/40 border-green-600 text-green-200'
+                    : 'bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-800'
+                }`}
+              >
+                🇧🇷 Somente Brasil
+              </button>
+
               <select value={category} onChange={(e) => { setCategory(e.target.value); }} className="input-field w-auto">
                 <option value="">Todas as Categorias</option>
                 {categories.map((c) => (
@@ -176,7 +205,7 @@ function FeedContent() {
           </form>
 
           <div className="mt-2 text-xs text-gray-500">
-            {total} resultados {search && `para "${search}"`}
+            {total} resultados {search && `para "${search}"`} {onlyBrazil && '(filtro Brasil ativo)'}
           </div>
         </div>
 
