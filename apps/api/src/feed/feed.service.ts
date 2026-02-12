@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Item, UserPreference, GroupPolicy, Category } from '../database/entities';
 import { User } from '../database/entities';
-import { VisibilityScope } from '@cti/shared';
 
 @Injectable()
 export class FeedService {
@@ -74,7 +73,13 @@ export class FeedService {
 
     if (allCategories.size > 0) {
       const cats = Array.from(allCategories);
-      conditions.push(`category.slug IN (:...feedCats)`);
+      conditions.push(`EXISTS (
+        SELECT 1
+        FROM item_categories "itemCategory"
+        INNER JOIN categories "feedCategory" ON "feedCategory".id = "itemCategory"."categoryId"
+        WHERE "itemCategory"."itemId" = item.id
+          AND "feedCategory".slug IN (:...feedCats)
+      )`);
       params.feedCats = cats;
     }
 
@@ -83,9 +88,14 @@ export class FeedService {
     }
 
     // Exclude keywords
+    let excludeKeywordIndex = 0;
     for (const kw of allKeywordsExclude) {
-      qb.andWhere(`item.title NOT ILIKE :excl_${kw.replace(/\s/g, '_')}`, {
-        [`excl_${kw.replace(/\s/g, '_')}`]: `%${kw}%`,
+      const normalizedKeyword = kw.trim();
+      if (!normalizedKeyword) continue;
+
+      const paramKey = `excludeKeyword${excludeKeywordIndex++}`;
+      qb.andWhere(`item.title NOT ILIKE :${paramKey}`, {
+        [paramKey]: `%${normalizedKeyword}%`,
       });
     }
 
