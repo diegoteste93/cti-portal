@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Item, UserPreference, GroupPolicy, Category } from '../database/entities';
 import { User } from '../database/entities';
-import { VisibilityScope } from '@cti/shared';
 
 @Injectable()
 export class FeedService {
@@ -74,7 +73,13 @@ export class FeedService {
 
     if (allCategories.size > 0) {
       const cats = Array.from(allCategories);
-      conditions.push(`category.slug IN (:...feedCats)`);
+      conditions.push(`EXISTS (
+        SELECT 1
+        FROM item_categories "itemCategory"
+        INNER JOIN categories "feedCategory" ON "feedCategory".id = "itemCategory"."categoriesId"
+        WHERE "itemCategory"."itemsId" = item.id
+          AND "feedCategory".slug IN (:...feedCats)
+      )`);
       params.feedCats = cats;
     }
 
@@ -83,17 +88,29 @@ export class FeedService {
     }
 
     // Exclude keywords
+    let excludeKeywordIndex = 0;
     for (const kw of allKeywordsExclude) {
-      qb.andWhere(`item.title NOT ILIKE :excl_${kw.replace(/\s/g, '_')}`, {
-        [`excl_${kw.replace(/\s/g, '_')}`]: `%${kw}%`,
+      const normalizedKeyword = kw.trim();
+      if (!normalizedKeyword) continue;
+
+      const paramKey = `excludeKeyword${excludeKeywordIndex++}`;
+      qb.andWhere(`item.title NOT ILIKE :${paramKey}`, {
+        [paramKey]: `%${normalizedKeyword}%`,
       });
     }
 
-    qb.orderBy('item."collectedAt"', 'DESC')
+    const paginatedQuery = qb.clone()
+      .orderBy('item."collectedAt"', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
-    const [data, total] = await qb.getManyAndCount();
+    const countQuery = qb.clone();
+
+    const [data, total] = await Promise.all([
+      paginatedQuery.getMany(),
+      countQuery.getCount(),
+    ]);
+
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 

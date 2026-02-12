@@ -16,6 +16,22 @@ const adminNav = [
   { href: '/admin/groups', label: 'Grupos', icon: '⊞' },
   { href: '/admin/audit', label: 'Log de Auditoria', icon: '◎' },
 ];
+const buildTimeLabel = (() => {
+  const raw = process.env.NEXT_PUBLIC_BUILD_TIME;
+  if (!raw) return 'não informado';
+
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'medium',
+  }).format(date);
+})();
+
+const commitHash = process.env.NEXT_PUBLIC_COMMIT_HASH || 'local';
+
+const branchName = process.env.NEXT_PUBLIC_BRANCH_NAME || 'prd';
 
 export default function Sidebar({ user }: { user: AuthUser }) {
   const pathname = usePathname();
@@ -87,6 +103,11 @@ export default function Sidebar({ user }: { user: AuthUser }) {
         >
           Sair
         </button>
+        <div className="mt-3 pt-3 border-t border-gray-800 text-[11px] text-gray-500">
+          <p>Branch PRD: <span className="font-mono">{branchName}</span></p>
+          <p>Versão PRD: <span className="font-mono">{commitHash}</span></p>
+          <p>Atualizado em: {buildTimeLabel}</p>
+        </div>
       </div>
     </aside>
   );
