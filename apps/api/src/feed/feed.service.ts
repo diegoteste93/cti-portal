@@ -99,11 +99,18 @@ export class FeedService {
       });
     }
 
-    qb.orderBy('item."collectedAt"', 'DESC')
+    const paginatedQuery = qb.clone()
+      .orderBy('item."collectedAt"', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
-    const [data, total] = await qb.getManyAndCount();
+    const countQuery = qb.clone();
+
+    const [data, total] = await Promise.all([
+      paginatedQuery.getMany(),
+      countQuery.getCount(),
+    ]);
+
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
