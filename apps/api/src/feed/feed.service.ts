@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Item, UserPreference, GroupPolicy, Category } from '../database/entities';
+import { In, Repository } from 'typeorm';
+import { Item, UserPreference, GroupPolicy } from '../database/entities';
 import { User } from '../database/entities';
 
 @Injectable()
@@ -10,7 +10,6 @@ export class FeedService {
     @InjectRepository(Item) private itemRepo: Repository<Item>,
     @InjectRepository(UserPreference) private prefRepo: Repository<UserPreference>,
     @InjectRepository(GroupPolicy) private policyRepo: Repository<GroupPolicy>,
-    @InjectRepository(Category) private catRepo: Repository<Category>,
   ) {}
 
   async getPersonalizedFeed(user: User, page = 1, limit = 20) {
@@ -43,9 +42,7 @@ export class FeedService {
       (policy.keywordsExclude || []).forEach((k) => allKeywordsExclude.add(k));
     }
 
-    let qb = this.itemRepo.createQueryBuilder('item')
-      .leftJoinAndSelect('item.categories', 'category')
-      .leftJoinAndSelect('item.source', 'source');
+    let qb = this.itemRepo.createQueryBuilder('item');
 
     // Visibility
     if (user.role !== 'admin') {
@@ -99,17 +96,32 @@ export class FeedService {
       });
     }
 
-    const paginatedQuery = qb.clone()
+    const paginatedIdsQuery = qb.clone()
+      .select('item.id', 'id')
       .orderBy('item."collectedAt"', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
     const countQuery = qb.clone();
 
-    const [data, total] = await Promise.all([
-      paginatedQuery.getMany(),
+    const [rawIds, total] = await Promise.all([
+      paginatedIdsQuery.getRawMany<{ id: string }>(),
       countQuery.getCount(),
     ]);
+
+    const itemIds = rawIds.map((row) => row.id);
+
+    if (itemIds.length === 0) {
+      return { data: [], total, page, limit, totalPages: Math.ceil(total / limit) };
+    }
+
+    const items = await this.itemRepo.find({
+      where: { id: In(itemIds) },
+      relations: ['categories', 'source'],
+    });
+
+    const order = new Map(itemIds.map((id, index) => [id, index]));
+    const data = items.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }

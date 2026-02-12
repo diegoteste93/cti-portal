@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { Item } from '../database/entities';
 import { VisibilityScope } from '@cti/shared';
 import { User } from '../database/entities';
@@ -22,24 +22,17 @@ export class ItemsService {
       search: typeof filters.search === 'string' ? filters.search.trim() : '',
     };
 
-    let query = this.buildListQuery(normalizedFilters, user, true)
-      .skip((page - 1) * limit)
-      .take(limit);
+    let query = this.buildListQuery(normalizedFilters, user, true);
 
     try {
-      const [data, total] = await query.getManyAndCount();
-      return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+      return await this.executePagedQuery(query, page, limit);
     } catch (error) {
       if (!normalizedFilters.search || !this.shouldFallbackSearch(error)) {
         throw error;
       }
 
-      query = this.buildListQuery(normalizedFilters, user, false)
-        .skip((page - 1) * limit)
-        .take(limit);
-
-      const [data, total] = await query.getManyAndCount();
-      return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+      query = this.buildListQuery(normalizedFilters, user, false);
+      return this.executePagedQuery(query, page, limit);
     }
   }
 
@@ -63,9 +56,7 @@ export class ItemsService {
   }
 
   private buildListQuery(filters: any, user: User, useFullTextSearch: boolean) {
-    let qb = this.itemRepo.createQueryBuilder('item')
-      .leftJoinAndSelect('item.categories', 'category')
-      .leftJoinAndSelect('item.source', 'source');
+    let qb = this.itemRepo.createQueryBuilder('item');
 
     // Visibility: PUBLIC or user's groups
     qb = this.applyVisibility(qb, user);
@@ -145,6 +136,36 @@ export class ItemsService {
     }
 
     return qb;
+  }
+
+  private async executePagedQuery(qb: SelectQueryBuilder<Item>, page: number, limit: number) {
+    const paginatedIdsQuery = qb.clone()
+      .select('item.id', 'id')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const countQuery = qb.clone();
+
+    const [rawIds, total] = await Promise.all([
+      paginatedIdsQuery.getRawMany<{ id: string }>(),
+      countQuery.getCount(),
+    ]);
+
+    const itemIds = rawIds.map((row) => row.id);
+
+    if (itemIds.length === 0) {
+      return { data: [], total, page, limit, totalPages: Math.ceil(total / limit) };
+    }
+
+    const items = await this.itemRepo.find({
+      where: { id: In(itemIds) },
+      relations: ['categories', 'source'],
+    });
+
+    const order = new Map(itemIds.map((id, index) => [id, index]));
+    const data = items.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   private normalizeArrayFilter(value: unknown): string[] {
