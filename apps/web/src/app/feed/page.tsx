@@ -15,11 +15,17 @@ interface FeedItem {
   collectedAt: string;
   publishedAt?: string;
   severity?: string;
-  cves: string;
-  tags: string;
+  cves: string | string[];
+  tags: string | string[];
   source?: { name: string };
   categories: { id: string; name: string; slug: string }[];
 }
+
+const parseListField = (value?: string | string[]) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return value.split(',').map((item) => item.trim()).filter(Boolean);
+};
 
 interface FeedResponse {
   data: FeedItem[];
@@ -199,10 +205,10 @@ function FeedContent() {
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-xs text-gray-500">{item.source?.name || 'Desconhecido'}</span>
                       <span className="text-xs text-gray-600">{new Date(item.collectedAt).toLocaleString()}</span>
-                      {item.cves && item.cves.split(',').filter(Boolean).map((cve) => (
+                      {parseListField(item.cves).map((cve) => (
                         <span key={cve} className="badge badge-critical text-[10px]">{cve}</span>
                       ))}
-                      {item.tags && item.tags.split(',').filter(Boolean).slice(0, 5).map((tag) => (
+                      {parseListField(item.tags).slice(0, 5).map((tag) => (
                         <span key={tag} className="badge badge-tag text-[10px]">{tag}</span>
                       ))}
                     </div>

@@ -31,6 +31,16 @@ export class UsersController {
     return this.usersService.updatePreferences(user.id, body);
   }
 
+  @Patch('me/account')
+  updateMyAccount(@CurrentUser() user: User, @Body() body: { name?: string; email?: string }) {
+    return this.usersService.updateMyAccount(user.id, body || {});
+  }
+
+  @Patch('me/password')
+  updateMyPassword(@CurrentUser() user: User, @Body() body: { currentPassword?: string; newPassword?: string }) {
+    return this.usersService.updateMyPassword(user.id, body?.currentPassword || '', body?.newPassword || '');
+  }
+
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)

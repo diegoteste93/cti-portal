@@ -30,6 +30,12 @@ export class User {
   @Column({ nullable: true })
   lastLoginAt: Date;
 
+  @Column({ nullable: true, select: false })
+  passwordHash: string;
+
+  @Column({ nullable: true, select: false })
+  passwordSalt: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
