@@ -101,8 +101,8 @@ export class ItemsService {
           .subQuery()
           .select('1')
           .from('item_categories', 'itemCategory')
-          .innerJoin('categories', 'filterCategory', 'filterCategory.id = itemCategory."categoryId"')
-          .where('itemCategory."itemId" = item.id')
+          .innerJoin('categories', 'filterCategory', 'filterCategory.id = itemCategory."categoriesId"')
+          .where('itemCategory."itemsId" = item.id')
           .andWhere('filterCategory.slug IN (:...categories)')
           .getQuery();
 

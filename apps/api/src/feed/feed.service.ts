@@ -76,8 +76,8 @@ export class FeedService {
       conditions.push(`EXISTS (
         SELECT 1
         FROM item_categories "itemCategory"
-        INNER JOIN categories "feedCategory" ON "feedCategory".id = "itemCategory"."categoryId"
-        WHERE "itemCategory"."itemId" = item.id
+        INNER JOIN categories "feedCategory" ON "feedCategory".id = "itemCategory"."categoriesId"
+        WHERE "itemCategory"."itemsId" = item.id
           AND "feedCategory".slug IN (:...feedCats)
       )`);
       params.feedCats = cats;
