@@ -96,7 +96,18 @@ export class ItemsService {
 
     // Category filter
     if (filters.categories.length) {
-      qb.andWhere('category.slug IN (:...categories)', { categories: filters.categories });
+      qb.andWhere((subQb) => {
+        const subQuery = subQb
+          .subQuery()
+          .select('1')
+          .from('item_categories', 'itemCategory')
+          .innerJoin('categories', 'filterCategory', 'filterCategory.id = itemCategory."categoryId"')
+          .where('itemCategory."itemId" = item.id')
+          .andWhere('filterCategory.slug IN (:...categories)')
+          .getQuery();
+
+        return `EXISTS ${subQuery}`;
+      }, { categories: filters.categories });
     }
 
     // Source filter
