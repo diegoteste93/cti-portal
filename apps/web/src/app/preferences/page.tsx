@@ -38,9 +38,14 @@ export default function PreferencesPage() {
   const [saved, setSaved] = useState(false);
   const [kwInclude, setKwInclude] = useState('');
   const [kwExclude, setKwExclude] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
 
   useEffect(() => {
     if (user) {
+      const scopedKey = `cti_custom_logo_url:${user.id}`;
+      const storedLogo = localStorage.getItem(scopedKey) || localStorage.getItem('cti_custom_logo_url') || '';
+      setLogoUrl(storedLogo);
+
       api.get<Preferences>('/users/me/preferences')
         .then((p) => {
           setPrefs(p);
@@ -81,6 +86,19 @@ export default function PreferencesPage() {
         keywordsInclude: split(kwInclude),
         keywordsExclude: split(kwExclude),
       });
+
+      if (user?.id) {
+        const scopedKey = `cti_custom_logo_url:${user.id}`;
+        const normalizedLogo = logoUrl.trim();
+        if (normalizedLogo) {
+          localStorage.setItem(scopedKey, normalizedLogo);
+          localStorage.setItem('cti_custom_logo_url', normalizedLogo);
+        } else {
+          localStorage.removeItem(scopedKey);
+          localStorage.removeItem('cti_custom_logo_url');
+        }
+      }
+
       setSaved(true);
     } catch (err: any) {
       alert(err.message);
@@ -180,6 +198,28 @@ export default function PreferencesPage() {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Logo personalizada */}
+            <div className="card">
+              <h3 className="text-sm font-semibold mb-3">Logo no topo</h3>
+              <p className="text-xs text-gray-500 mb-3">
+                Informe a URL de uma imagem para personalizar a logo exibida no topo da barra lateral.
+              </p>
+              <input
+                type="url"
+                value={logoUrl}
+                onChange={(e) => { setLogoUrl(e.target.value); setSaved(false); }}
+                placeholder="https://seu-dominio.com/logo.png"
+                className="input-field"
+              />
+              {!!logoUrl.trim() && (
+                <img
+                  src={logoUrl}
+                  alt="Prévia da logo"
+                  className="mt-3 h-16 w-auto max-w-full object-contain rounded border border-gray-800 bg-gray-900 p-2"
+                />
+              )}
             </div>
 
             <div className="flex items-center gap-3">

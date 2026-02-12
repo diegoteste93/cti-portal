@@ -28,6 +28,12 @@ export async function devLogin(email: string): Promise<AuthUser> {
   return normalizeUser(result.user);
 }
 
+export async function localLogin(username: string, password: string): Promise<AuthUser> {
+  const result = await api.post<{ accessToken: string; user: AuthUser }>('/auth/local-login', { username, password });
+  api.setToken(result.accessToken);
+  return normalizeUser(result.user);
+}
+
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
     if (!api.getToken()) return null;

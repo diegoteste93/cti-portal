@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { AuthUser, isAdmin, isEditor, logout } from '@/lib/auth';
 
 const nav = [
@@ -16,14 +17,49 @@ const adminNav = [
   { href: '/admin/groups', label: 'Grupos', icon: '⊞' },
   { href: '/admin/audit', label: 'Log de Auditoria', icon: '◎' },
 ];
+const buildTimeLabel = (() => {
+  const raw = process.env.NEXT_PUBLIC_BUILD_TIME;
+  if (!raw) return 'não informado';
+
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'medium',
+  }).format(date);
+})();
+
+const commitHash = process.env.NEXT_PUBLIC_COMMIT_HASH || 'local';
+
+const branchName = process.env.NEXT_PUBLIC_BRANCH_NAME || 'prd';
+
+const logoStoragePrefix = 'cti_custom_logo_url';
 
 export default function Sidebar({ user }: { user: AuthUser }) {
   const pathname = usePathname();
+  const [customLogoUrl, setCustomLogoUrl] = useState('');
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !user?.id) return;
+
+    const scoped = localStorage.getItem(`${logoStoragePrefix}:${user.id}`);
+    const fallback = localStorage.getItem(logoStoragePrefix);
+    setCustomLogoUrl(scoped || fallback || '');
+  }, [user?.id]);
 
   return (
     <aside className="w-64 bg-gray-900 border-r border-gray-800 min-h-screen flex flex-col">
       <div className="p-6 border-b border-gray-800">
-        <h1 className="text-xl font-bold text-cti-accent">CTI Portal</h1>
+        {customLogoUrl ? (
+          <img
+            src={customLogoUrl}
+            alt="Logo personalizada"
+            className="h-12 w-auto max-w-full object-contain"
+          />
+        ) : (
+          <h1 className="text-xl font-bold text-cti-accent">CTI Portal</h1>
+        )}
         <p className="text-xs text-gray-500 mt-1">Inteligência de Ameaças</p>
       </div>
 
@@ -87,6 +123,11 @@ export default function Sidebar({ user }: { user: AuthUser }) {
         >
           Sair
         </button>
+        <div className="mt-3 pt-3 border-t border-gray-800 text-[11px] text-gray-500">
+          <p>Branch PRD: <span className="font-mono">{branchName}</span></p>
+          <p>Versão PRD: <span className="font-mono">{commitHash}</span></p>
+          <p>Atualizado em: {buildTimeLabel}</p>
+        </div>
       </div>
     </aside>
   );
