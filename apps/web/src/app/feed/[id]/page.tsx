@@ -16,11 +16,11 @@ interface ItemDetail {
   publishedAt?: string;
   collectedAt: string;
   severity?: string;
-  cves: string;
-  cwes: string;
-  tags: string;
-  vendors: string;
-  products: string;
+  cves: string | string[];
+  cwes: string | string[];
+  tags: string | string[];
+  vendors: string | string[];
+  products: string | string[];
   source?: { id: string; name: string };
   categories?: { id: string; name: string; slug: string }[];
   rawJson?: any;
@@ -45,7 +45,11 @@ export default function ItemDetailPage() {
 
   if (authLoading || !user) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Carregando...</div></div>;
 
-  const splitField = (val: string | undefined) => val ? val.split(',').filter(Boolean) : [];
+  const splitField = (val?: string | string[]) => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val.filter(Boolean);
+    return val.split(',').map((item) => item.trim()).filter(Boolean);
+  };
 
   return (
     <div className="flex min-h-screen">
