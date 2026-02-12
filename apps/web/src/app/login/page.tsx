@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginWithGoogle, devLogin, localLogin } from '@/lib/auth';
+import { loginWithGoogle, devLogin, localLogin, passwordLogin } from '@/lib/auth';
 import { useAuth } from '@/components/AuthProvider';
 
 export default function LoginPage() {
@@ -10,6 +10,8 @@ export default function LoginPage() {
   const [devEmail, setDevEmail] = useState('admin@ctiportal.local');
   const [localUsername, setLocalUsername] = useState('admin');
   const [localPassword, setLocalPassword] = useState('admin123');
+  const [accountEmail, setAccountEmail] = useState('');
+  const [accountPassword, setAccountPassword] = useState('');
   const router = useRouter();
   const { refresh } = useAuth();
 
@@ -22,6 +24,20 @@ export default function LoginPage() {
       window.location.href = url;
     } else {
       setError('Google Client ID não configurado. Use o login dev abaixo.');
+    }
+  };
+
+  const handlePasswordLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await passwordLogin(accountEmail, accountPassword);
+      await refresh();
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Falha no login com senha');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,6 +98,37 @@ export default function LoginPage() {
             </svg>
             {loading ? 'Entrando...' : 'Entrar com Google'}
           </button>
+
+          {/* Login com email e senha */}
+          <div className="mt-6 pt-4 border-t border-gray-800">
+            <div className="flex items-center gap-2 justify-center mb-3">
+              <span className="badge bg-indigo-900 text-indigo-200">CONTA</span>
+              <span className="text-xs text-gray-500">Entrar com email e senha</span>
+            </div>
+            <div className="space-y-2">
+              <input
+                type="email"
+                value={accountEmail}
+                onChange={(e) => setAccountEmail(e.target.value)}
+                placeholder="Email"
+                className="input-field text-sm"
+              />
+              <input
+                type="password"
+                value={accountPassword}
+                onChange={(e) => setAccountPassword(e.target.value)}
+                placeholder="Senha"
+                className="input-field text-sm"
+              />
+              <button
+                onClick={handlePasswordLogin}
+                disabled={loading}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 text-sm"
+              >
+                {loading ? 'Entrando...' : 'Entrar com senha'}
+              </button>
+            </div>
+          </div>
 
           {/* Local Admin Login */}
           <div className="mt-6 pt-4 border-t border-gray-800">

@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserPreference, Group } from '../database/entities';
 import { Role, UserStatus } from '@cti/shared';
 import { AuditService } from '../audit/audit.service';
+import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -56,6 +57,61 @@ export class UsersService {
     return user;
   }
 
+  async updateMyAccount(userId: string, data: { name?: string; email?: string }) {
+    const user = await this.findById(userId);
+
+    const nextName = data.name?.trim();
+    const nextEmail = data.email?.trim().toLowerCase();
+
+    if (nextEmail && nextEmail !== user.email) {
+      const existing = await this.userRepo.findOneBy({ email: nextEmail });
+      if (existing && existing.id !== userId) {
+        throw new ConflictException('Este email já está em uso');
+      }
+      user.email = nextEmail;
+    }
+
+    if (nextName) {
+      user.name = nextName;
+    }
+
+    const saved = await this.userRepo.save(user);
+    await this.auditService.log(userId, 'USER_PROFILE_UPDATED', 'user', userId, { name: saved.name, email: saved.email });
+    return saved;
+  }
+
+  async updateMyPassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.userRepo
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .addSelect('user.passwordSalt')
+      .where('user.id = :userId', { userId })
+      .getOne();
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    if (!newPassword || newPassword.length < 8) {
+      throw new BadRequestException('A nova senha deve ter ao menos 8 caracteres');
+    }
+
+    if (user.passwordHash && user.passwordSalt) {
+      const currentValid = this.verifyPassword(currentPassword || '', user.passwordSalt, user.passwordHash);
+      if (!currentValid) {
+        throw new UnauthorizedException('Senha atual inválida');
+      }
+    }
+
+    const passwordData = this.hashPassword(newPassword);
+    user.passwordHash = passwordData.hash;
+    user.passwordSalt = passwordData.salt;
+    await this.userRepo.save(user);
+
+    await this.auditService.log(userId, 'USER_PASSWORD_UPDATED', 'user', userId);
+    return { success: true };
+  }
+
   async getPreferences(userId: string) {
     let pref = await this.prefRepo.findOneBy({ userId });
     if (!pref) {
@@ -73,4 +129,19 @@ export class UsersService {
     Object.assign(pref, data);
     return this.prefRepo.save(pref);
   }
+
+
+  private hashPassword(password: string) {
+    const salt = randomBytes(16).toString('hex');
+    const hash = scryptSync(password, salt, 64).toString('hex');
+    return { salt, hash };
+  }
+
+  private verifyPassword(password: string, salt: string, hash: string) {
+    const computed = scryptSync(password, salt, 64);
+    const stored = Buffer.from(hash, 'hex');
+    if (computed.length !== stored.length) return false;
+    return timingSafeEqual(computed, stored);
+  }
+
 }

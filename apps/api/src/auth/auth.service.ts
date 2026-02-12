@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OAuth2Client } from 'google-auth-library';
+import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { User } from '../database/entities';
 import { Role, UserStatus } from '@cti/shared';
 import { AuditService } from '../audit/audit.service';
@@ -62,7 +63,6 @@ export class AuthService {
       throw new UnauthorizedException('Token do Google inválido');
     }
 
-    // Domain validation
     const emailDomain = payload.email.split('@')[1]?.toLowerCase();
     if (this.allowedDomains.length > 0) {
       if (!this.allowedDomains.includes(emailDomain)) {
@@ -79,7 +79,6 @@ export class AuthService {
       }
     }
 
-    // JIT Provisioning
     let user = await this.userRepo.findOne({
       where: { email: payload.email },
       relations: ['groups'],
@@ -100,7 +99,6 @@ export class AuthService {
       throw new UnauthorizedException('Conta de usuário desativada');
     }
 
-    // Update last login
     user.lastLoginAt = new Date();
     user.picture = payload.picture || user.picture;
     user.name = payload.name || user.name;
@@ -124,7 +122,7 @@ export class AuthService {
 
     this.logger.warn(`DEV LOGIN used for: ${email}`);
 
-    let user = await this.userRepo.findOne({
+    const user = await this.userRepo.findOne({
       where: { email },
       relations: ['groups'],
     });
@@ -141,6 +139,37 @@ export class AuthService {
     await this.userRepo.save(user);
 
     await this.auditService.log(user.id, 'DEV_LOGIN', 'user', user.id);
+
+    const accessToken = this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return { accessToken, user };
+  }
+
+  async passwordLogin(email: string, password: string): Promise<{ accessToken: string; user: User }> {
+    const user = await this.userRepo
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .addSelect('user.passwordSalt')
+      .leftJoinAndSelect('user.groups', 'group')
+      .where('user.email = :email', { email: email.trim().toLowerCase() })
+      .getOne();
+
+    if (!user || user.status === UserStatus.INACTIVE) {
+      throw new UnauthorizedException('Usuário ou senha inválidos');
+    }
+
+    if (!user.passwordHash || !user.passwordSalt || !this.verifyPassword(password, user.passwordSalt, user.passwordHash)) {
+      throw new UnauthorizedException('Usuário ou senha inválidos');
+    }
+
+    user.lastLoginAt = new Date();
+    await this.userRepo.save(user);
+
+    await this.auditService.log(user.id, 'PASSWORD_LOGIN', 'user', user.id);
 
     const accessToken = this.jwtService.sign({
       sub: user.id,
@@ -174,17 +203,16 @@ export class AuthService {
         role: Role.ADMIN,
         status: UserStatus.ACTIVE,
       });
-      user = await this.userRepo.save(user);
     }
 
     if (user.status === UserStatus.INACTIVE) {
       throw new UnauthorizedException('Conta de usuário desativada');
     }
 
-    if (user.role !== Role.ADMIN) {
-      user.role = Role.ADMIN;
-    }
-
+    user.role = Role.ADMIN;
+    const passwordData = this.hashPassword(configuredPassword);
+    user.passwordHash = passwordData.hash;
+    user.passwordSalt = passwordData.salt;
     user.lastLoginAt = new Date();
     user = await this.userRepo.save(user);
 
@@ -197,6 +225,19 @@ export class AuthService {
     });
 
     return { accessToken, user };
+  }
+
+  hashPassword(password: string) {
+    const salt = randomBytes(16).toString('hex');
+    const hash = scryptSync(password, salt, 64).toString('hex');
+    return { salt, hash };
+  }
+
+  verifyPassword(password: string, salt: string, hash: string) {
+    const computed = scryptSync(password, salt, 64);
+    const stored = Buffer.from(hash, 'hex');
+    if (computed.length !== stored.length) return false;
+    return timingSafeEqual(computed, stored);
   }
 
   async validateUserById(userId: string): Promise<User | null> {

@@ -18,6 +18,16 @@ class DevLoginDto {
   email: string;
 }
 
+class PasswordLoginDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}
+
 class LocalLoginDto {
   @IsString()
   @IsNotEmpty()
@@ -38,6 +48,11 @@ export class AuthController {
   @Post('google')
   async googleLogin(@Body() dto: GoogleLoginDto) {
     return this.authService.validateGoogleToken(dto.idToken);
+  }
+
+  @Post('password-login')
+  async passwordLogin(@Body() dto: PasswordLoginDto) {
+    return this.authService.passwordLogin(dto.email, dto.password);
   }
 
   @Post('dev-login')
