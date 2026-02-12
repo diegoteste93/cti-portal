@@ -6,5 +6,5 @@ export default function SeverityBadge({ severity }: { severity?: string }) {
     MEDIUM: 'badge badge-medium',
     LOW: 'badge badge-low',
   };
-  return <span className={classes[severity] || 'badge bg-gray-700 text-gray-300'}>{severity}</span>;
+  return <span className={classes[severity] || 'badge bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}>{severity}</span>;
 }
