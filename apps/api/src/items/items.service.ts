@@ -12,71 +12,35 @@ export class ItemsService {
   ) {}
 
   async findAll(filters: any, user: User) {
-    const page = filters.page || 1;
-    const limit = Math.min(filters.limit || 20, 100);
+    const page = Number(filters.page) || 1;
+    const limit = Math.min(Number(filters.limit) || 20, 100);
+    const normalizedFilters = {
+      ...filters,
+      categories: this.normalizeArrayFilter(filters.categories),
+      sourceIds: this.normalizeArrayFilter(filters.sourceIds),
+      tags: this.normalizeArrayFilter(filters.tags),
+      search: typeof filters.search === 'string' ? filters.search.trim() : '',
+    };
 
-    let qb = this.itemRepo.createQueryBuilder('item')
-      .leftJoinAndSelect('item.categories', 'category')
-      .leftJoinAndSelect('item.source', 'source');
+    let query = this.buildListQuery(normalizedFilters, user, true)
+      .skip((page - 1) * limit)
+      .take(limit);
 
-    // Visibility: PUBLIC or user's groups
-    qb = this.applyVisibility(qb, user);
-
-    // Full-text search
-    if (filters.search) {
-      qb.andWhere(
-        `item."searchVector" @@ plainto_tsquery('english', :search)`,
-        { search: filters.search },
-      );
-      qb.addOrderBy(
-        `ts_rank(item."searchVector", plainto_tsquery('english', :search))`,
-        'DESC',
-      );
-    }
-
-    // Category filter
-    if (filters.categories?.length) {
-      qb.andWhere('category.slug IN (:...categories)', { categories: filters.categories });
-    }
-
-    // Source filter
-    if (filters.sourceIds?.length) {
-      qb.andWhere('item."sourceId" IN (:...sourceIds)', { sourceIds: filters.sourceIds });
-    }
-
-    // Tag filter
-    if (filters.tags?.length) {
-      for (let i = 0; i < filters.tags.length; i++) {
-        qb.andWhere(`item.tags LIKE :tag${i}`, { [`tag${i}`]: `%${filters.tags[i]}%` });
+    try {
+      const [data, total] = await query.getManyAndCount();
+      return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+    } catch (error) {
+      if (!normalizedFilters.search || !this.shouldFallbackSearch(error)) {
+        throw error;
       }
-    }
 
-    // CVE filter
-    if (filters.cve) {
-      qb.andWhere('item.cves LIKE :cve', { cve: `%${filters.cve}%` });
-    }
+      query = this.buildListQuery(normalizedFilters, user, false)
+        .skip((page - 1) * limit)
+        .take(limit);
 
-    // Severity filter
-    if (filters.severity) {
-      qb.andWhere('item.severity = :severity', { severity: filters.severity });
+      const [data, total] = await query.getManyAndCount();
+      return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
     }
-
-    // Date filters
-    if (filters.dateFrom) {
-      qb.andWhere('item."collectedAt" >= :dateFrom', { dateFrom: filters.dateFrom });
-    }
-    if (filters.dateTo) {
-      qb.andWhere('item."collectedAt" <= :dateTo', { dateTo: filters.dateTo });
-    }
-
-    if (!filters.search) {
-      qb.orderBy('item."collectedAt"', 'DESC');
-    }
-
-    qb.skip((page - 1) * limit).take(limit);
-
-    const [data, total] = await qb.getManyAndCount();
-    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findById(id: string, user: User) {
@@ -96,6 +60,107 @@ export class ItemsService {
       }
     }
     return item;
+  }
+
+  private buildListQuery(filters: any, user: User, useFullTextSearch: boolean) {
+    let qb = this.itemRepo.createQueryBuilder('item')
+      .leftJoinAndSelect('item.categories', 'category')
+      .leftJoinAndSelect('item.source', 'source');
+
+    // Visibility: PUBLIC or user's groups
+    qb = this.applyVisibility(qb, user);
+
+    if (filters.search) {
+      if (useFullTextSearch) {
+        qb.andWhere(
+          `item."searchVector" @@ plainto_tsquery('english', :search)`,
+          { search: filters.search },
+        );
+        qb.addOrderBy(
+          `ts_rank(item."searchVector", plainto_tsquery('english', :search))`,
+          'DESC',
+        );
+      } else {
+        qb.andWhere(
+          `(
+            item.title ILIKE :searchLike
+            OR item.summary ILIKE :searchLike
+            OR item.url ILIKE :searchLike
+            OR item.tags ILIKE :searchLike
+            OR item.cves ILIKE :searchLike
+          )`,
+          { searchLike: `%${filters.search}%` },
+        );
+      }
+    }
+
+    // Category filter
+    if (filters.categories.length) {
+      qb.andWhere('category.slug IN (:...categories)', { categories: filters.categories });
+    }
+
+    // Source filter
+    if (filters.sourceIds.length) {
+      qb.andWhere('item."sourceId" IN (:...sourceIds)', { sourceIds: filters.sourceIds });
+    }
+
+    // Tag filter
+    if (filters.tags.length) {
+      for (let i = 0; i < filters.tags.length; i++) {
+        qb.andWhere(`item.tags ILIKE :tag${i}`, { [`tag${i}`]: `%${filters.tags[i]}%` });
+      }
+    }
+
+    // CVE filter
+    if (filters.cve) {
+      qb.andWhere('item.cves ILIKE :cve', { cve: `%${filters.cve}%` });
+    }
+
+    // Severity filter
+    if (filters.severity) {
+      qb.andWhere('item.severity = :severity', { severity: filters.severity });
+    }
+
+    // Date filters
+    if (filters.dateFrom) {
+      qb.andWhere('item."collectedAt" >= :dateFrom', { dateFrom: filters.dateFrom });
+    }
+    if (filters.dateTo) {
+      qb.andWhere('item."collectedAt" <= :dateTo', { dateTo: filters.dateTo });
+    }
+
+    if (!filters.search || !useFullTextSearch) {
+      qb.orderBy('item."collectedAt"', 'DESC');
+    }
+
+    return qb;
+  }
+
+  private normalizeArrayFilter(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return value.map((entry) => String(entry).trim()).filter(Boolean);
+    }
+
+    if (typeof value === 'string') {
+      return value
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+    }
+
+    return [];
+  }
+
+  private shouldFallbackSearch(error: unknown) {
+    if (!error || typeof error !== 'object') return false;
+
+    const message = 'message' in error ? String(error.message || '') : '';
+    return (
+      message.includes('searchVector')
+      || message.includes('plainto_tsquery')
+      || message.includes('tsvector')
+      || message.includes('function ts_rank')
+    );
   }
 
   private applyVisibility(qb: SelectQueryBuilder<Item>, user: User) {
