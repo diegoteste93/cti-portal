@@ -151,6 +151,54 @@ export class AuthService {
     return { accessToken, user };
   }
 
+  async localAdminLogin(username: string, password: string): Promise<{ accessToken: string; user: User }> {
+    if (this.config.get('NODE_ENV') === 'production') {
+      throw new UnauthorizedException('Login local desativado em produção');
+    }
+
+    const configuredUsername = this.config.get('LOCAL_ADMIN_USERNAME', 'admin');
+    const configuredPassword = this.config.get('LOCAL_ADMIN_PASSWORD', 'admin123');
+    const configuredEmail = this.config.get('LOCAL_ADMIN_EMAIL', 'admin@ctiportal.local');
+    const configuredName = this.config.get('LOCAL_ADMIN_NAME', 'Administrador Local');
+
+    if (username !== configuredUsername || password !== configuredPassword) {
+      throw new UnauthorizedException('Usuário ou senha inválidos');
+    }
+
+    let user = await this.userRepo.findOne({ where: { email: configuredEmail }, relations: ['groups'] });
+
+    if (!user) {
+      user = this.userRepo.create({
+        email: configuredEmail,
+        name: configuredName,
+        role: Role.ADMIN,
+        status: UserStatus.ACTIVE,
+      });
+      user = await this.userRepo.save(user);
+    }
+
+    if (user.status === UserStatus.INACTIVE) {
+      throw new UnauthorizedException('Conta de usuário desativada');
+    }
+
+    if (user.role !== Role.ADMIN) {
+      user.role = Role.ADMIN;
+    }
+
+    user.lastLoginAt = new Date();
+    user = await this.userRepo.save(user);
+
+    await this.auditService.log(user.id, 'LOCAL_ADMIN_LOGIN', 'user', user.id);
+
+    const accessToken = this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return { accessToken, user };
+  }
+
   async validateUserById(userId: string): Promise<User | null> {
     return this.userRepo.findOne({
       where: { id: userId, status: UserStatus.ACTIVE },

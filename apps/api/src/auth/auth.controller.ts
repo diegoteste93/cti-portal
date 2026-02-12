@@ -18,6 +18,16 @@ class DevLoginDto {
   email: string;
 }
 
+class LocalLoginDto {
+  @IsString()
+  @IsNotEmpty()
+  username: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -36,6 +46,14 @@ export class AuthController {
       throw new UnauthorizedException('Não disponível em produção');
     }
     return this.authService.devLogin(dto.email);
+  }
+
+  @Post('local-login')
+  async localLogin(@Body() dto: LocalLoginDto) {
+    if (this.config.get('NODE_ENV') === 'production') {
+      throw new UnauthorizedException('Não disponível em produção');
+    }
+    return this.authService.localAdminLogin(dto.username, dto.password);
   }
 
   @Get('me')
