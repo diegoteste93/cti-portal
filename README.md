@@ -151,6 +151,25 @@ Dicas:
 - Krebs on Security (RSS)
 - npm Security Advisories
 - Maven Security Advisories
+- Ransomware.live - Recent Victims (API)
+- Ransomware.live - Recent Cyber Attacks (API)
+- US-CERT CISA Alerts (RSS)
+- SANS Internet Storm Center (RSS)
+- Abuse.ch URLhaus Recent Payloads (API)
+- Abuse.ch URLhaus Recent URLs (API)
+- CERT.br - Notícias (RSS)
+- ANPD - Notícias (RSS)
+- CTIR Gov (GSI) - Notícias (RSS)
+- CISO Advisor Brasil (RSS)
+- Canaltech Segurança (RSS)
+
+### Filtro Brasil (recomendado)
+
+Para destacar incidentes e vazamentos com contexto local, use preferências de feed e políticas de grupo com filtros como:
+
+- Categorias: `data_leak`, `fraud`, `phishing`, `ransomware`
+- Keywords include: `Brasil`, `LGPD`, `ANPD`, `gov.br`, `pix`, `CPF`, `CNPJ`
+- Keywords exclude: termos de baixo sinal para sua operação (ex.: marketing, opinativo genérico)
 
 ### Adicionando Nova Fonte via UI
 
