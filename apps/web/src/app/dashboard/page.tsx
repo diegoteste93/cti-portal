@@ -173,6 +173,18 @@ export default function DashboardPage() {
 
   const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
 
+  const buildTagFeedHref = (tag: string) => {
+    const params = new URLSearchParams();
+    params.set('tags', tag);
+    return `/feed?${params.toString()}`;
+  };
+
+  const buildCategoryFeedHref = (slug: string) => {
+    const params = new URLSearchParams();
+    params.set('categories', slug);
+    return `/feed?${params.toString()}`;
+  };
+
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -295,7 +307,7 @@ export default function DashboardPage() {
                     return (
                       <div key={`${campaign.tag}-${idx}`}>
                         <div className="mb-1 flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
-                          <span>{campaign.tag}</span>
+                          <Link href={buildTagFeedHref(campaign.tag)} className="hover:text-cyan-600 hover:underline dark:hover:text-cyan-400">{campaign.tag}</Link>
                           <span className="font-semibold">{campaign.count}</span>
                         </div>
                         <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-800">
@@ -318,7 +330,7 @@ export default function DashboardPage() {
                     return (
                       <div key={category.slug}>
                         <div className="mb-1 flex items-center justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-300">{category.label}</span>
+                          <Link href={buildCategoryFeedHref(category.slug)} className="text-gray-600 hover:text-cyan-600 hover:underline dark:text-gray-300 dark:hover:text-cyan-400">{category.label}</Link>
                           <span className="font-semibold">{category.count}</span>
                         </div>
                         <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-800">
@@ -354,7 +366,16 @@ export default function DashboardPage() {
                       return (
                         <div key={`${item.label}-${index}`} className="flex items-center gap-2">
                           <span className={`h-2.5 w-2.5 rounded-full ${colors[index] || 'bg-gray-500'}`} />
-                          <span className="text-gray-600 dark:text-gray-300">{item.label}</span>
+                          {'slug' in (item as any) ? (
+                            <Link
+                              href={buildCategoryFeedHref((item as any).slug)}
+                              className="text-gray-600 hover:text-cyan-600 hover:underline dark:text-gray-300 dark:hover:text-cyan-400"
+                            >
+                              {item.label}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-600 dark:text-gray-300">{item.label}</span>
+                          )}
                           <span className="font-semibold">{pct}%</span>
                         </div>
                       );
