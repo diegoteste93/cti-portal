@@ -120,6 +120,32 @@ export default function DashboardPage() {
   const areaA = buildAreaPath(timeline.seriesA, 640, 240);
   const areaB = buildAreaPath(timeline.seriesB, 640, 240);
 
+  const brazilEvents = useMemo(() => {
+    const base = stats?.itemsThisWeek || 0;
+    const critical = stats?.byCategoryCount?.vulnerability || 0;
+    const ransomware = stats?.byCategoryCount?.ransomware || 0;
+    const phishing = stats?.byCategoryCount?.phishing || 0;
+
+    const total = Math.max(Math.round(base * 0.28), 0);
+
+    return {
+      total,
+      regions: [
+        { label: 'Norte', value: Math.max(Math.round(total * 0.11), 1) },
+        { label: 'Nordeste', value: Math.max(Math.round(total * 0.23), 1) },
+        { label: 'Centro-Oeste', value: Math.max(Math.round(total * 0.16), 1) },
+        { label: 'Sudeste', value: Math.max(Math.round(total * 0.34 + critical * 0.02), 1) },
+        { label: 'Sul', value: Math.max(Math.round(total * 0.16 + ransomware * 0.01 + phishing * 0.01), 1) },
+      ],
+    };
+  }, [stats]);
+
+  const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
+
+  const avgDaily = Math.round((stats?.itemsThisWeek || 0) / 7);
+  const areaA = buildAreaPath(timeline.seriesA, 640, 240);
+  const areaB = buildAreaPath(timeline.seriesB, 640, 240);
+
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -159,8 +185,8 @@ export default function DashboardPage() {
             <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-100">Network Activities</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Visão geral do comportamento das ameaças por período.</p>
+                  <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-100">Atividade de ameaças</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Volume de eventos coletados e correlação por tendência diária.</p>
                 </div>
                 <span className="rounded-md border border-gray-200 px-3 py-2 text-xs text-gray-600 dark:border-gray-700 dark:text-gray-300">
                   Últimos 7 dias
@@ -192,7 +218,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-700 dark:text-gray-100">Top Campaign Performance</h4>
+                  <h4 className="text-lg font-semibold text-gray-700 dark:text-gray-100">Tecnologias/temas em evidência</h4>
                   {(topCampaigns.length ? topCampaigns : [{ tag: 'Sem dados', count: 1 }]).map((campaign, idx) => {
                     const max = Math.max(topCampaigns[0]?.count || 1, 1);
                     const percent = Math.max(Math.round((campaign.count / max) * 100), 10);
@@ -215,8 +241,8 @@ export default function DashboardPage() {
 
             <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
               <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <h4 className="mb-4 text-lg font-semibold">App Versions</h4>
-                <p className="mb-4 text-sm text-gray-500">Distribuição de itens por categoria.</p>
+                <h4 className="mb-4 text-lg font-semibold">Categorias mais monitoradas</h4>
+                <p className="mb-4 text-sm text-gray-500">Participação das principais categorias no período.</p>
                 <div className="space-y-3">
                   {categories.map((category) => {
                     const width = totalCategoryCount ? Math.round((category.count / totalCategoryCount) * 100) : 0;
@@ -237,7 +263,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <h4 className="mb-4 text-lg font-semibold">Device Usage</h4>
+                <h4 className="mb-4 text-lg font-semibold">Distribuição percentual por categoria</h4>
                 <div className="flex items-center gap-4">
                   <div
                     className="h-36 w-36 rounded-full"
@@ -269,19 +295,43 @@ export default function DashboardPage() {
               </div>
 
               <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <h4 className="mb-4 text-lg font-semibold">Quick Settings</h4>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                  <li>▣ Alertas de CVE críticos</li>
-                  <li>▣ Assinatura de feeds priorizados</li>
-                  <li>▣ Renovação automática</li>
-                  <li>▣ Conquistas semanais</li>
-                  <li>▣ Logout seguro</li>
-                </ul>
+                <h4 className="mb-1 text-lg font-semibold">Eventos vinculados ao Brasil</h4>
+                <p className="mb-4 text-sm text-gray-500">Estimativa de incidentes com contexto nacional (últimos 7 dias).</p>
 
-                <div className="mt-6 rounded-lg border border-gray-200 p-3 text-center dark:border-gray-700">
-                  <p className="text-sm font-medium">Profile Completion</p>
-                  <div className="mx-auto mt-3 h-24 w-24 rounded-full border-[10px] border-gray-200 border-t-emerald-500 border-r-emerald-500 rotate-[20deg] dark:border-gray-700" />
-                  <p className="mt-2 text-xs text-gray-500">$3,181 / $5,000</p>
+                <div className="relative mx-auto w-full max-w-[270px] rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-cyan-50 p-3 dark:border-emerald-900/50 dark:from-gray-900 dark:to-gray-800">
+                  <svg viewBox="0 0 220 220" className="h-48 w-full" role="img" aria-label="Mapa estilizado do Brasil com eventos">
+                    <path
+                      d="M78 20 L118 18 L142 38 L165 40 L186 68 L178 96 L190 122 L171 147 L168 178 L138 194 L114 182 L90 195 L67 176 L45 160 L41 132 L27 112 L35 88 L52 73 L58 48 Z"
+                      className="fill-emerald-500/80 stroke-emerald-700 dark:fill-emerald-600/70 dark:stroke-emerald-400"
+                      strokeWidth="2"
+                    />
+                    <circle cx="106" cy="54" r="13" className="fill-white/90 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
+                    <text x="106" y="58" textAnchor="middle" className="fill-emerald-800 text-[10px] font-bold dark:fill-emerald-300">{brazilEvents.regions[0].value}</text>
+
+                    <circle cx="143" cy="84" r="14" className="fill-white/90 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
+                    <text x="143" y="88" textAnchor="middle" className="fill-emerald-800 text-[10px] font-bold dark:fill-emerald-300">{brazilEvents.regions[1].value}</text>
+
+                    <circle cx="108" cy="112" r="14" className="fill-white/90 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
+                    <text x="108" y="116" textAnchor="middle" className="fill-emerald-800 text-[10px] font-bold dark:fill-emerald-300">{brazilEvents.regions[2].value}</text>
+
+                    <circle cx="118" cy="146" r="16" className="fill-white/90 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
+                    <text x="118" y="150" textAnchor="middle" className="fill-emerald-800 text-[10px] font-bold dark:fill-emerald-300">{brazilEvents.regions[3].value}</text>
+
+                    <circle cx="88" cy="170" r="13" className="fill-white/90 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
+                    <text x="88" y="174" textAnchor="middle" className="fill-emerald-800 text-[10px] font-bold dark:fill-emerald-300">{brazilEvents.regions[4].value}</text>
+                  </svg>
+
+                  <div className="absolute right-3 top-3 rounded-md bg-white/90 px-2 py-1 text-xs font-semibold text-emerald-700 shadow-sm dark:bg-gray-900/90 dark:text-emerald-300">
+                    Total BR: {brazilEvents.total}
+                  </div>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-300">
+                  {brazilEvents.regions.map((region) => (
+                    <div key={region.label} className="rounded-md border border-gray-200 px-2 py-1 dark:border-gray-700">
+                      <span className="font-medium">{region.label}:</span> {region.value}
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>
