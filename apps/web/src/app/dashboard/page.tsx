@@ -45,15 +45,15 @@ export default function DashboardPage() {
   };
 
   const categoryColors: Record<string, string> = {
-    vulnerability: 'bg-red-900/50 border-red-800',
-    exploit: 'bg-orange-900/50 border-orange-800',
-    ransomware: 'bg-purple-900/50 border-purple-800',
-    fraud: 'bg-yellow-900/50 border-yellow-800',
-    data_leak: 'bg-pink-900/50 border-pink-800',
-    malware: 'bg-red-900/50 border-red-800',
-    phishing: 'bg-amber-900/50 border-amber-800',
-    supply_chain: 'bg-blue-900/50 border-blue-800',
-    general: 'bg-gray-800/50 border-gray-700',
+    vulnerability: 'bg-red-50 border-red-200 dark:bg-red-900/50 dark:border-red-800',
+    exploit: 'bg-orange-50 border-orange-200 dark:bg-orange-900/50 dark:border-orange-800',
+    ransomware: 'bg-purple-50 border-purple-200 dark:bg-purple-900/50 dark:border-purple-800',
+    fraud: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/50 dark:border-yellow-800',
+    data_leak: 'bg-pink-50 border-pink-200 dark:bg-pink-900/50 dark:border-pink-800',
+    malware: 'bg-red-50 border-red-200 dark:bg-red-900/50 dark:border-red-800',
+    phishing: 'bg-amber-50 border-amber-200 dark:bg-amber-900/50 dark:border-amber-800',
+    supply_chain: 'bg-blue-50 border-blue-200 dark:bg-blue-900/50 dark:border-blue-800',
+    general: 'bg-gray-50 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700',
   };
 
   const categoryPalette: Record<string, string> = {
@@ -106,15 +106,15 @@ export default function DashboardPage() {
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <div className="card">
-                <p className="text-sm text-gray-400">Total de Itens</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total de Itens</p>
                 <p className="text-3xl font-bold text-cti-accent">{stats.totalItems.toLocaleString()}</p>
               </div>
               <div className="card">
-                <p className="text-sm text-gray-400">Hoje</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Hoje</p>
                 <p className="text-3xl font-bold text-cti-green">{stats.itemsToday}</p>
               </div>
               <div className="card">
-                <p className="text-sm text-gray-400">Esta Semana</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Esta Semana</p>
                 <p className="text-3xl font-bold text-cti-amber">{stats.itemsThisWeek}</p>
               </div>
             </div>
@@ -153,15 +153,12 @@ export default function DashboardPage() {
               </div>
 
               <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Visão Rápida</h3>
-                <div className="flex items-center gap-4">
-                  <div className="relative w-28 h-28 flex-shrink-0">
-                    <div
-                      className="w-full h-full rounded-full"
-                      style={{ background: distributionGradient }}
-                    />
-                    <div className="absolute inset-4 rounded-full bg-gray-900 border border-gray-700 flex items-center justify-center text-xs text-gray-300 text-center px-1">
-                      Categorias
+                <h3 className="text-lg font-semibold mb-4">Por Categoria</h3>
+                <div className="space-y-2">
+                  {Object.entries(stats.byCategoryCount || {}).map(([slug, count]) => (
+                    <div key={slug} className={`flex justify-between items-center p-2 rounded border ${categoryColors[slug] || 'bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700'}`}>
+                      <span className="text-sm">{categoryLabels[slug] || slug}</span>
+                      <span className="font-mono font-bold">{count}</span>
                     </div>
                   </div>
                   <div className="space-y-2 text-sm w-full">
@@ -229,12 +226,12 @@ export default function DashboardPage() {
                   <Link
                     key={item.id}
                     href={`/feed/${item.id}`}
-                    className="block p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors border border-gray-800"
+                    className="block p-3 rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-800"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{item.title}</p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {item.source?.name || 'Desconhecido'} &middot; {new Date(item.collectedAt).toLocaleString()}
                         </p>
                       </div>
@@ -248,7 +245,7 @@ export default function DashboardPage() {
                   </Link>
                 ))}
                 {(stats.recentItems || []).length === 0 && (
-                  <p className="text-gray-500 text-sm text-center py-8">
+                  <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-8">
                     Nenhum item ainda. Configure fontes para começar a coletar dados de inteligência de ameaças.
                   </p>
                 )}
