@@ -261,15 +261,25 @@ export class FeedService {
     const topTags = topTagsEntries.map(([tag]) => tag);
     const topTagsCount = Object.fromEntries(topTagsEntries);
 
-    const recentItems = await this.applyPeriodFilter(
+    const recentItemIds = await this.applyPeriodFilter(
       this.itemRepo
         .createQueryBuilder('item')
-        .leftJoinAndSelect('item.categories', 'categories')
-        .leftJoinAndSelect('item.source', 'source')
+        .select('item.id', 'id')
         .orderBy('item."collectedAt"', 'DESC')
         .take(30),
       period,
-    ).getMany();
+    ).getRawMany<{ id: string }>();
+
+    const orderedRecentItemIds = recentItemIds.map((row) => row.id);
+    const recentItems = orderedRecentItemIds.length > 0
+      ? await this.itemRepo.find({
+        where: { id: In(orderedRecentItemIds) },
+        relations: ['categories', 'source'],
+      })
+      : [];
+
+    const recentItemsOrder = new Map(orderedRecentItemIds.map((id, index) => [id, index]));
+    recentItems.sort((a, b) => (recentItemsOrder.get(a.id) ?? 0) - (recentItemsOrder.get(b.id) ?? 0));
 
     const brazilKeywords = ['brasil', 'brazil', 'brazilian', 'brasileiro', 'brasileira', 'br'];
     const regionKeywords: Record<string, string[]> = {
