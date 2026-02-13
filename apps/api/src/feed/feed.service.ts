@@ -1,8 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { Item, UserPreference, GroupPolicy } from '../database/entities';
 import { User } from '../database/entities';
+
+type DashboardRange = '1h' | '24h' | '7d' | '30d' | 'custom';
+
+interface DashboardPeriod {
+  startDate: Date;
+  endDate: Date;
+  label: string;
+}
 
 @Injectable()
 export class FeedService {
@@ -126,47 +134,100 @@ export class FeedService {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async getDashboardStats(user: User) {
+  private resolveDashboardPeriod(range?: DashboardRange, from?: string, to?: string): DashboardPeriod {
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - 7);
 
-    const totalItems = await this.itemRepo.count();
-    const itemsToday = await this.itemRepo.count({
-      where: { collectedAt: new Date(todayStart.toISOString()) as any },
-    });
+    if (range === 'custom' && from && to) {
+      const startDate = new Date(from);
+      const endDate = new Date(to);
 
-    // Simpler approach: use query builder for date comparisons
-    const itemsTodayCount = await this.itemRepo.createQueryBuilder('item')
-      .where('item."collectedAt" >= :todayStart', { todayStart })
-      .getCount();
+      if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime()) && startDate <= endDate) {
+        return {
+          startDate,
+          endDate,
+          label: `Personalizado (${startDate.toLocaleDateString('pt-BR')} - ${endDate.toLocaleDateString('pt-BR')})`,
+        };
+      }
+    }
 
-    const itemsWeekCount = await this.itemRepo.createQueryBuilder('item')
-      .where('item."collectedAt" >= :weekStart', { weekStart })
-      .getCount();
+    if (range === '1h') {
+      return {
+        startDate: new Date(now.getTime() - 60 * 60 * 1000),
+        endDate: now,
+        label: 'Última hora',
+      };
+    }
 
-    // Category counts
-    const catCounts = await this.itemRepo
-      .createQueryBuilder('item')
-      .leftJoin('item.categories', 'cat')
-      .select('cat.slug', 'slug')
-      .addSelect('COUNT(item.id)', 'count')
-      .groupBy('cat.slug')
-      .getRawMany();
+    if (range === '24h') {
+      return {
+        startDate: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+        endDate: now,
+        label: 'Últimas 24 horas',
+      };
+    }
+
+    if (range === '30d') {
+      return {
+        startDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+        endDate: now,
+        label: 'Últimos 30 dias',
+      };
+    }
+
+    return {
+      startDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      endDate: now,
+      label: 'Últimos 7 dias',
+    };
+  }
+
+  private applyPeriodFilter(queryBuilder: SelectQueryBuilder<Item>, period: DashboardPeriod) {
+    return queryBuilder
+      .andWhere('item."collectedAt" >= :startDate', { startDate: period.startDate })
+      .andWhere('item."collectedAt" <= :endDate', { endDate: period.endDate });
+  }
+
+  async getDashboardStats(user: User, range?: DashboardRange, from?: string, to?: string) {
+    const period = this.resolveDashboardPeriod(range, from, to);
+
+    const totalItems = await this.applyPeriodFilter(
+      this.itemRepo.createQueryBuilder('item'),
+      period,
+    ).getCount();
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const itemsTodayCount = await this.applyPeriodFilter(
+      this.itemRepo.createQueryBuilder('item').where('item."collectedAt" >= :todayStart', { todayStart }),
+      period,
+    ).getCount();
+
+    const itemsPeriodCount = totalItems;
+
+    const catCounts = await this.applyPeriodFilter(
+      this.itemRepo
+        .createQueryBuilder('item')
+        .leftJoin('item.categories', 'cat')
+        .select('cat.slug', 'slug')
+        .addSelect('COUNT(item.id)', 'count')
+        .groupBy('cat.slug'),
+      period,
+    ).getRawMany();
 
     const byCategoryCount: Record<string, number> = {};
     for (const row of catCounts) {
       if (row.slug) byCategoryCount[row.slug] = parseInt(row.count, 10);
     }
 
-    // Top CVEs
-    const recentWithCves = await this.itemRepo
-      .createQueryBuilder('item')
-      .where("item.cves != ''")
-      .orderBy('item."collectedAt"', 'DESC')
-      .take(50)
-      .getMany();
+    const recentWithCves = await this.applyPeriodFilter(
+      this.itemRepo
+        .createQueryBuilder('item')
+        .where("item.cves != ''")
+        .orderBy('item."collectedAt"', 'DESC')
+        .take(50),
+      period,
+    ).getMany();
 
     const cveCount: Record<string, number> = {};
     for (const item of recentWithCves) {
@@ -179,13 +240,14 @@ export class FeedService {
       .slice(0, 10)
       .map(([cve]) => cve);
 
-    // Top tags
-    const recentWithTags = await this.itemRepo
-      .createQueryBuilder('item')
-      .where("item.tags != ''")
-      .orderBy('item."collectedAt"', 'DESC')
-      .take(100)
-      .getMany();
+    const recentWithTags = await this.applyPeriodFilter(
+      this.itemRepo
+        .createQueryBuilder('item')
+        .where("item.tags != ''")
+        .orderBy('item."collectedAt"', 'DESC')
+        .take(100),
+      period,
+    ).getMany();
 
     const tagCount: Record<string, number> = {};
     for (const item of recentWithTags) {
@@ -199,22 +261,57 @@ export class FeedService {
     const topTags = topTagsEntries.map(([tag]) => tag);
     const topTagsCount = Object.fromEntries(topTagsEntries);
 
-    // Recent items
-    const recentItems = await this.itemRepo.find({
-      relations: ['categories', 'source'],
-      order: { collectedAt: 'DESC' },
-      take: 10,
+    const recentItems = await this.applyPeriodFilter(
+      this.itemRepo
+        .createQueryBuilder('item')
+        .leftJoinAndSelect('item.categories', 'categories')
+        .leftJoinAndSelect('item.source', 'source')
+        .orderBy('item."collectedAt"', 'DESC')
+        .take(30),
+      period,
+    ).getMany();
+
+    const brazilKeywords = ['brasil', 'brazil', 'brazilian', 'brasileiro', 'brasileira', 'br'];
+    const regionKeywords: Record<string, string[]> = {
+      Norte: ['acre', 'amapá', 'amazonas', 'pará', 'rondônia', 'roraima', 'tocantins', 'norte'],
+      Nordeste: ['bahia', 'ceará', 'maranhão', 'paraíba', 'pernambuco', 'piauí', 'sergipe', 'alagoas', 'rio grande do norte', 'nordeste'],
+      'Centro-Oeste': ['goiás', 'goias', 'mato grosso', 'mato grosso do sul', 'distrito federal', 'brasília', 'centro-oeste'],
+      Sudeste: ['são paulo', 'sao paulo', 'rio de janeiro', 'espírito santo', 'espirito santo', 'minas gerais', 'sudeste'],
+      Sul: ['paraná', 'parana', 'rio grande do sul', 'santa catarina', 'sul'],
+    };
+
+    const brazilItems = recentItems.filter((item) => {
+      const text = `${item.title || ''} ${item.summary || ''} ${(item.tags || []).join(' ')}`.toLowerCase();
+      return brazilKeywords.some((keyword) => text.includes(keyword));
+    });
+
+    const regions = Object.entries(regionKeywords).map(([label, keywords]) => {
+      const matchedItems = brazilItems.filter((item) => {
+        const text = `${item.title || ''} ${item.summary || ''} ${(item.tags || []).join(' ')}`.toLowerCase();
+        return keywords.some((keyword) => text.includes(keyword));
+      });
+
+      return {
+        label,
+        value: matchedItems.length,
+        itemIds: matchedItems.slice(0, 8).map((item) => item.id),
+      };
     });
 
     return {
       totalItems,
       itemsToday: itemsTodayCount,
-      itemsThisWeek: itemsWeekCount,
+      itemsThisWeek: itemsPeriodCount,
       byCategoryCount,
       topCves,
       topTags,
       topTagsCount,
       recentItems,
+      rangeLabel: period.label,
+      brazilEvents: {
+        total: brazilItems.length,
+        regions,
+      },
     };
   }
 }
