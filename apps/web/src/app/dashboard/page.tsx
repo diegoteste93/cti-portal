@@ -116,9 +116,11 @@ export default function DashboardPage() {
 
   const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
 
-  const avgDaily = Math.round((stats?.itemsThisWeek || 0) / 7);
-  const areaA = buildAreaPath(timeline.seriesA, 640, 240);
-  const areaB = buildAreaPath(timeline.seriesB, 640, 240);
+  const chartMetrics = useMemo(() => ({
+    avgDaily: Math.round((stats?.itemsThisWeek || 0) / 7),
+    areaA: buildAreaPath(timeline.seriesA, 640, 240),
+    areaB: buildAreaPath(timeline.seriesB, 640, 240),
+  }), [stats?.itemsThisWeek, timeline.seriesA, timeline.seriesB]);
 
   const brazilEvents = useMemo(() => {
     const base = stats?.itemsThisWeek || 0;
@@ -166,7 +168,7 @@ export default function DashboardPage() {
           <div className="space-y-5">
             <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
               <KpiCard title="Total Itens" value={stats.totalItems.toLocaleString()} delta="4% desde a semana passada" />
-              <KpiCard title="Média diária" value={avgDaily.toLocaleString()} delta="3% desde a semana passada" />
+              <KpiCard title="Média diária" value={chartMetrics.avgDaily.toLocaleString()} delta="3% desde a semana passada" />
               <KpiCard
                 title="Vulnerabilidades"
                 value={(stats.byCategoryCount?.vulnerability || 0).toLocaleString()}
@@ -207,8 +209,8 @@ export default function DashboardPage() {
                         strokeWidth="1"
                       />
                     ))}
-                    <path d={areaB} fill="rgba(22,163,74,0.35)" />
-                    <path d={areaA} fill="rgba(14,116,144,0.45)" />
+                    <path d={chartMetrics.areaB} fill="rgba(22,163,74,0.35)" />
+                    <path d={chartMetrics.areaA} fill="rgba(14,116,144,0.45)" />
                   </svg>
                   <div className="mt-2 grid grid-cols-7 text-center text-xs text-gray-500 dark:text-gray-400">
                     {['Jan 01', 'Jan 02', 'Jan 03', 'Jan 04', 'Jan 05', 'Jan 06', 'Jan 07'].map((day) => (
