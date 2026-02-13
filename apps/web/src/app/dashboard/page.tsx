@@ -142,6 +142,12 @@ export default function DashboardPage() {
     };
   }, [stats]);
 
+  const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
+
+  const avgDaily = Math.round((stats?.itemsThisWeek || 0) / 7);
+  const areaA = buildAreaPath(timeline.seriesA, 640, 240);
+  const areaB = buildAreaPath(timeline.seriesB, 640, 240);
+
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
