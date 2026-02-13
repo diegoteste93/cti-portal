@@ -130,7 +130,7 @@ function FeedContent() {
       <Sidebar user={user} />
       <main className="flex-1 overflow-auto">
         {/* Filters bar */}
-        <div className="sticky top-0 z-10 bg-gray-950 border-b border-gray-800 p-4">
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 dark:bg-gray-900 dark:border-gray-800">
           <form onSubmit={handleSearch} className="space-y-3">
             <div className="flex gap-3">
               <input
@@ -227,7 +227,7 @@ function FeedContent() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-100 mb-1">{item.title}</h3>
+                    <h3 className="mb-1 font-semibold text-gray-800 dark:text-gray-100">{item.title}</h3>
                     {item.summary && (
                       <p className="text-sm text-gray-400 line-clamp-2">{item.summary}</p>
                     )}

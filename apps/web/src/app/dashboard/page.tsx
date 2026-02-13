@@ -11,12 +11,19 @@ interface DashboardStats {
   totalItems: number;
   itemsToday: number;
   itemsThisWeek: number;
+  rangeLabel?: string;
   byCategoryCount?: Record<string, number>;
   topCves?: string[];
   topTags?: string[];
   topTagsCount?: Record<string, number>;
   recentItems?: any[];
+  brazilEvents?: {
+    total: number;
+    regions: Array<{ label: string; value: number; itemIds: string[] }>;
+  };
 }
+
+type DateRange = '1h' | '24h' | '7d' | '30d' | 'custom';
 
 interface KpiCardProps {
   title: string;
@@ -59,16 +66,35 @@ export default function DashboardPage() {
   const { user, loading } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [selectedRange, setSelectedRange] = useState<DateRange>('7d');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
 
   useEffect(() => {
     if (!user) return;
 
+    if (selectedRange === 'custom' && (!customFrom || !customTo)) {
+      setStats(null);
+      setLoadingStats(false);
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set('range', selectedRange);
+
+    if (selectedRange === 'custom') {
+      params.set('from', customFrom);
+      params.set('to', customTo);
+    }
+
+    setLoadingStats(true);
+
     api
-      .get('/feed/dashboard')
+      .get(`/feed/dashboard?${params.toString()}`)
       .then((response) => setStats(response as DashboardStats))
       .catch(console.error)
       .finally(() => setLoadingStats(false));
-  }, [user]);
+  }, [user, selectedRange, customFrom, customTo]);
 
   const categoryLabels: Record<string, string> = {
     vulnerability: 'Vulnerabilidades',
@@ -80,6 +106,14 @@ export default function DashboardPage() {
     phishing: 'Phishing',
     supply_chain: 'Supply Chain',
     general: 'Geral',
+  };
+
+  const rangeLabels: Record<DateRange, string> = {
+    '1h': 'Última hora',
+    '24h': 'Últimas 24 horas',
+    '7d': 'Última semana',
+    '30d': 'Último mês',
+    custom: 'Personalizado',
   };
 
   const timeline = useMemo(() => {
@@ -116,37 +150,40 @@ export default function DashboardPage() {
 
   const categoryCountTotal = categories.reduce((sum, category) => sum + category.count, 0);
 
+  const recentItemsById = useMemo(() => {
+    return new Map((stats?.recentItems || []).map((item: any) => [item.id, item]));
+  }, [stats?.recentItems]);
+
   const chartMetrics = useMemo(() => ({
     avgDaily: Math.round((stats?.itemsThisWeek || 0) / 7),
     areaA: buildAreaPath(timeline.seriesA, 640, 240),
     areaB: buildAreaPath(timeline.seriesB, 640, 240),
   }), [stats?.itemsThisWeek, timeline.seriesA, timeline.seriesB]);
 
-  const brazilEvents = useMemo(() => {
-    const base = stats?.itemsThisWeek || 0;
-    const critical = stats?.byCategoryCount?.vulnerability || 0;
-    const ransomware = stats?.byCategoryCount?.ransomware || 0;
-    const phishing = stats?.byCategoryCount?.phishing || 0;
-
-    const total = Math.max(Math.round(base * 0.28), 0);
-
-    return {
-      total,
-      regions: [
-        { label: 'Norte', value: Math.max(Math.round(total * 0.11), 1) },
-        { label: 'Nordeste', value: Math.max(Math.round(total * 0.23), 1) },
-        { label: 'Centro-Oeste', value: Math.max(Math.round(total * 0.16), 1) },
-        { label: 'Sudeste', value: Math.max(Math.round(total * 0.34 + critical * 0.02), 1) },
-        { label: 'Sul', value: Math.max(Math.round(total * 0.16 + ransomware * 0.01 + phishing * 0.01), 1) },
-      ],
-    };
-  }, [stats]);
+  const brazilEvents = stats?.brazilEvents || {
+    total: 0,
+    regions: [
+      { label: 'Norte', value: 0, itemIds: [] },
+      { label: 'Nordeste', value: 0, itemIds: [] },
+      { label: 'Centro-Oeste', value: 0, itemIds: [] },
+      { label: 'Sudeste', value: 0, itemIds: [] },
+      { label: 'Sul', value: 0, itemIds: [] },
+    ],
+  };
 
   const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
 
-  const avgDaily = Math.round((stats?.itemsThisWeek || 0) / 7);
-  const areaA = buildAreaPath(timeline.seriesA, 640, 240);
-  const areaB = buildAreaPath(timeline.seriesB, 640, 240);
+  const buildTagFeedHref = (tag: string) => {
+    const params = new URLSearchParams();
+    params.set('tags', tag);
+    return `/feed?${params.toString()}`;
+  };
+
+  const buildCategoryFeedHref = (slug: string) => {
+    const params = new URLSearchParams();
+    params.set('categories', slug);
+    return `/feed?${params.toString()}`;
+  };
 
   if (loading || !user) {
     return (
@@ -160,9 +197,51 @@ export default function DashboardPage() {
     <div className="flex min-h-screen">
       <Sidebar user={user} />
       <main className="flex-1 overflow-auto bg-gray-50 p-6 dark:bg-gray-950">
-        <h2 className="mb-5 text-2xl font-bold">Dashboard</h2>
+        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <h2 className="text-2xl font-bold">Dashboard</h2>
+          <div className="flex flex-wrap items-end gap-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Período</label>
+              <select
+                value={selectedRange}
+                onChange={(e) => setSelectedRange(e.target.value as DateRange)}
+                className="rounded-md border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+              >
+                {Object.entries(rangeLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {selectedRange === 'custom' && (
+              <>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">De</label>
+                  <input
+                    type="date"
+                    value={customFrom}
+                    onChange={(e) => setCustomFrom(e.target.value)}
+                    className="rounded-md border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Até</label>
+                  <input
+                    type="date"
+                    value={customTo}
+                    onChange={(e) => setCustomTo(e.target.value)}
+                    className="rounded-md border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
 
-        {loadingStats ? (
+        {selectedRange === 'custom' && (!customFrom || !customTo) ? (
+          <div className="text-sm text-amber-600">Selecione data inicial e final para aplicar o filtro personalizado.</div>
+        ) : loadingStats ? (
           <div className="text-gray-500">Carregando estatísticas...</div>
         ) : stats ? (
           <div className="space-y-5">
@@ -191,7 +270,7 @@ export default function DashboardPage() {
                   <p className="text-sm text-gray-500 dark:text-gray-400">Volume de eventos coletados e correlação por tendência diária.</p>
                 </div>
                 <span className="rounded-md border border-gray-200 px-3 py-2 text-xs text-gray-600 dark:border-gray-700 dark:text-gray-300">
-                  Últimos 7 dias
+                  {stats.rangeLabel || 'Últimos 7 dias'}
                 </span>
               </div>
 
@@ -228,7 +307,7 @@ export default function DashboardPage() {
                     return (
                       <div key={`${campaign.tag}-${idx}`}>
                         <div className="mb-1 flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
-                          <span>{campaign.tag}</span>
+                          <Link href={buildTagFeedHref(campaign.tag)} className="hover:text-cyan-600 hover:underline dark:hover:text-cyan-400">{campaign.tag}</Link>
                           <span className="font-semibold">{campaign.count}</span>
                         </div>
                         <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-800">
@@ -251,7 +330,7 @@ export default function DashboardPage() {
                     return (
                       <div key={category.slug}>
                         <div className="mb-1 flex items-center justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-300">{category.label}</span>
+                          <Link href={buildCategoryFeedHref(category.slug)} className="text-gray-600 hover:text-cyan-600 hover:underline dark:text-gray-300 dark:hover:text-cyan-400">{category.label}</Link>
                           <span className="font-semibold">{category.count}</span>
                         </div>
                         <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-800">
@@ -287,7 +366,16 @@ export default function DashboardPage() {
                       return (
                         <div key={`${item.label}-${index}`} className="flex items-center gap-2">
                           <span className={`h-2.5 w-2.5 rounded-full ${colors[index] || 'bg-gray-500'}`} />
-                          <span className="text-gray-600 dark:text-gray-300">{item.label}</span>
+                          {'slug' in (item as any) ? (
+                            <Link
+                              href={buildCategoryFeedHref((item as any).slug)}
+                              className="text-gray-600 hover:text-cyan-600 hover:underline dark:text-gray-300 dark:hover:text-cyan-400"
+                            >
+                              {item.label}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-600 dark:text-gray-300">{item.label}</span>
+                          )}
                           <span className="font-semibold">{pct}%</span>
                         </div>
                       );
@@ -298,7 +386,7 @@ export default function DashboardPage() {
 
               <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <h4 className="mb-1 text-lg font-semibold">Eventos vinculados ao Brasil</h4>
-                <p className="mb-4 text-sm text-gray-500">Estimativa de incidentes com contexto nacional (últimos 7 dias).</p>
+                <p className="mb-4 text-sm text-gray-500">Eventos detectados com menção ao Brasil no período filtrado. Clique em uma região para ver os itens relacionados.</p>
 
                 <div className="relative mx-auto w-full max-w-[270px] rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-cyan-50 p-3 dark:border-emerald-900/50 dark:from-gray-900 dark:to-gray-800">
                   <svg viewBox="0 0 220 220" className="h-48 w-full" role="img" aria-label="Mapa estilizado do Brasil com eventos">
@@ -328,10 +416,25 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-300">
+                <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 dark:text-gray-300">
                   {brazilEvents.regions.map((region) => (
-                    <div key={region.label} className="rounded-md border border-gray-200 px-2 py-1 dark:border-gray-700">
-                      <span className="font-medium">{region.label}:</span> {region.value}
+                    <div key={region.label} className="rounded-md border border-gray-200 px-2 py-2 dark:border-gray-700">
+                      <div className="mb-1 font-medium">{region.label}: {region.value}</div>
+                      <div className="flex flex-wrap gap-1">
+                        {region.itemIds.length > 0 ? region.itemIds.map((id) => {
+                          const item = recentItemsById.get(id);
+                          if (!item) return null;
+                          return (
+                            <Link
+                              key={id}
+                              href={`/feed/${id}`}
+                              className="rounded bg-cyan-50 px-2 py-0.5 text-cyan-700 hover:underline dark:bg-cyan-900/40 dark:text-cyan-300"
+                            >
+                              {item.title.slice(0, 36)}
+                            </Link>
+                          );
+                        }) : <span className="text-gray-500">Sem itens mapeados</span>}
+                      </div>
                     </div>
                   ))}
                 </div>
