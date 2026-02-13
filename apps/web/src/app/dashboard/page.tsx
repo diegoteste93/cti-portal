@@ -150,6 +150,10 @@ export default function DashboardPage() {
 
   const categoryCountTotal = categories.reduce((sum, category) => sum + category.count, 0);
 
+  const recentItemsById = useMemo(() => {
+    return new Map((stats?.recentItems || []).map((item: any) => [item.id, item]));
+  }, [stats?.recentItems]);
+
   const chartMetrics = useMemo(() => ({
     avgDaily: Math.round((stats?.itemsThisWeek || 0) / 7),
     areaA: buildAreaPath(timeline.seriesA, 640, 240),
