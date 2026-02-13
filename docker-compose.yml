@@ -71,9 +71,12 @@ services:
     ports:
       - "3000:3000"
     env_file: .env
+    volumes:
+      - web_uploads:/app/apps/web/public/uploads
     depends_on:
       - api
 
 volumes:
   pgdata:
   redisdata:
+  web_uploads:
