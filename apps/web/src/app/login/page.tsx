@@ -1,13 +1,18 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginWithGoogle, devLogin } from '@/lib/auth';
+import { loginWithGoogle, devLogin, localLogin, passwordLogin } from '@/lib/auth';
 import { useAuth } from '@/components/AuthProvider';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [devEmail, setDevEmail] = useState('admin@ctiportal.local');
+  const [localUsername, setLocalUsername] = useState('admin');
+  const [localPassword, setLocalPassword] = useState('admin123');
+  const [accountEmail, setAccountEmail] = useState('');
+  const [accountPassword, setAccountPassword] = useState('');
   const router = useRouter();
   const { refresh } = useAuth();
 
@@ -20,6 +25,34 @@ export default function LoginPage() {
       window.location.href = url;
     } else {
       setError('Google Client ID não configurado. Use o login dev abaixo.');
+    }
+  };
+
+  const handlePasswordLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await passwordLogin(accountEmail, accountPassword);
+      await refresh();
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Falha no login com senha');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLocalLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await localLogin(localUsername, localPassword);
+      await refresh();
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Falha no login local');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,16 +71,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950 px-4">
       <div className="w-full max-w-md">
+        <div className="mb-3 flex justify-end">
+          <div className="w-36"><ThemeToggle /></div>
+        </div>
         <div className="card text-center">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-cti-accent mb-2">CTI Portal</h1>
-            <p className="text-gray-400 text-sm">Plataforma de Inteligência de Ameaças Cibernéticas</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Plataforma de Inteligência de Ameaças Cibernéticas</p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-200 text-sm">
+            <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 dark:bg-red-900/30 dark:border-red-800 dark:text-red-200 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -67,11 +103,76 @@ export default function LoginPage() {
             {loading ? 'Entrando...' : 'Entrar com Google'}
           </button>
 
+          {/* Login com email e senha */}
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex items-center gap-2 justify-center mb-3">
+              <span className="badge bg-indigo-900 text-indigo-200">CONTA</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Entrar com email e senha</span>
+            </div>
+            <div className="space-y-2">
+              <input
+                type="email"
+                value={accountEmail}
+                onChange={(e) => setAccountEmail(e.target.value)}
+                placeholder="Email"
+                className="input-field text-sm"
+              />
+              <input
+                type="password"
+                value={accountPassword}
+                onChange={(e) => setAccountPassword(e.target.value)}
+                placeholder="Senha"
+                className="input-field text-sm"
+              />
+              <button
+                onClick={handlePasswordLogin}
+                disabled={loading}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 text-sm"
+              >
+                {loading ? 'Entrando...' : 'Entrar com senha'}
+              </button>
+            </div>
+          </div>
+
+          {/* Local Admin Login */}
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex items-center gap-2 justify-center mb-3">
+              <span className="badge bg-blue-900 text-blue-200">LOCAL</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Usuário e senha de administrador local</span>
+            </div>
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={localUsername}
+                onChange={(e) => setLocalUsername(e.target.value)}
+                placeholder="Usuário"
+                className="input-field text-sm"
+              />
+              <input
+                type="password"
+                value={localPassword}
+                onChange={(e) => setLocalPassword(e.target.value)}
+                placeholder="Senha"
+                className="input-field text-sm"
+              />
+              <button
+                onClick={handleLocalLogin}
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 text-sm"
+              >
+                {loading ? 'Entrando...' : 'Entrar com usuário local'}
+              </button>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                Padrão local: usuário <span className="font-mono">admin</span> e senha <span className="font-mono">admin123</span>
+              </p>
+            </div>
+          </div>
+
           {/* Dev Login */}
-          <div className="mt-6 pt-4 border-t border-gray-800">
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2 justify-center mb-3">
               <span className="badge bg-amber-900 text-amber-200">DEV</span>
-              <span className="text-xs text-gray-500">Login rápido (apenas desenvolvimento)</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Login rápido (apenas desenvolvimento)</span>
             </div>
             <div className="space-y-2">
               <input
@@ -88,13 +189,13 @@ export default function LoginPage() {
               >
                 {loading ? 'Entrando...' : 'Entrar como Dev'}
               </button>
-              <p className="text-[10px] text-gray-600 mt-1">
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
                 Administrador padrão: admin@ctiportal.local (criado pelo seed inicial)
               </p>
             </div>
           </div>
 
-          <p className="mt-6 text-xs text-gray-600">
+          <p className="mt-6 text-xs text-gray-500 dark:text-gray-400">
             Acesso restrito apenas a domínios autorizados.
           </p>
         </div>

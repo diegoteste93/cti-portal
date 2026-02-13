@@ -38,9 +38,21 @@ export default function PreferencesPage() {
   const [saved, setSaved] = useState(false);
   const [kwInclude, setKwInclude] = useState('');
   const [kwExclude, setKwExclude] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
     if (user) {
+      const scopedKey = `cti_custom_logo_url:${user.id}`;
+      const storedLogo = localStorage.getItem(scopedKey) || localStorage.getItem('cti_custom_logo_url') || '';
+      setLogoUrl(storedLogo);
+      setProfileName(user.name || '');
+      setProfileEmail(user.email || '');
+
       api.get<Preferences>('/users/me/preferences')
         .then((p) => {
           setPrefs(p);
@@ -71,6 +83,46 @@ export default function PreferencesPage() {
     setSaved(false);
   };
 
+  const handleUpdateAccount = async () => {
+    setSaving(true);
+    try {
+      await api.patch('/users/me/account', {
+        name: profileName.trim(),
+        email: profileEmail.trim(),
+      });
+      setSaved(true);
+      window.location.reload();
+    } catch (err: any) {
+      alert(err.message || 'Falha ao atualizar conta');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      alert('A confirmação da nova senha não confere');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await api.patch('/users/me/password', {
+        currentPassword,
+        newPassword,
+      });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setSaved(true);
+      alert('Senha atualizada com sucesso');
+    } catch (err: any) {
+      alert(err.message || 'Falha ao atualizar senha');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -81,6 +133,19 @@ export default function PreferencesPage() {
         keywordsInclude: split(kwInclude),
         keywordsExclude: split(kwExclude),
       });
+
+      if (user?.id) {
+        const scopedKey = `cti_custom_logo_url:${user.id}`;
+        const normalizedLogo = logoUrl.trim();
+        if (normalizedLogo) {
+          localStorage.setItem(scopedKey, normalizedLogo);
+          localStorage.setItem('cti_custom_logo_url', normalizedLogo);
+        } else {
+          localStorage.removeItem(scopedKey);
+          localStorage.removeItem('cti_custom_logo_url');
+        }
+      }
+
       setSaved(true);
     } catch (err: any) {
       alert(err.message);
@@ -116,6 +181,65 @@ export default function PreferencesPage() {
                 <p className="text-xs text-gray-500 mt-2">As políticas de grupo são aplicadas automaticamente ao seu feed.</p>
               </div>
             )}
+
+            {/* Conta do usuário */}
+            <div className="card">
+              <h3 className="text-sm font-semibold mb-3">Minha Conta</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-gray-400">Nome</label>
+                  <input
+                    value={profileName}
+                    onChange={(e) => { setProfileName(e.target.value); setSaved(false); }}
+                    className="input-field"
+                    placeholder="Seu nome"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400">Email</label>
+                  <input
+                    type="email"
+                    value={profileEmail}
+                    onChange={(e) => { setProfileEmail(e.target.value); setSaved(false); }}
+                    className="input-field"
+                    placeholder="seu@email.com"
+                  />
+                </div>
+              </div>
+              <button onClick={handleUpdateAccount} className="btn-secondary mt-3" disabled={saving}>
+                {saving ? 'Salvando...' : 'Atualizar dados da conta'}
+              </button>
+
+              <div className="mt-5 pt-4 border-t border-gray-800">
+                <h4 className="text-xs font-semibold mb-2 text-gray-300">Alterar senha</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="input-field"
+                    placeholder="Senha atual"
+                  />
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="input-field"
+                    placeholder="Nova senha (mín. 8)"
+                  />
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="input-field"
+                    placeholder="Confirmar nova senha"
+                  />
+                </div>
+                <button onClick={handleUpdatePassword} className="btn-secondary mt-3" disabled={saving}>
+                  {saving ? 'Salvando...' : 'Atualizar senha'}
+                </button>
+              </div>
+            </div>
 
             {/* Technologies */}
             <div className="card">
@@ -180,6 +304,28 @@ export default function PreferencesPage() {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Logo personalizada */}
+            <div className="card">
+              <h3 className="text-sm font-semibold mb-3">Logo no topo</h3>
+              <p className="text-xs text-gray-500 mb-3">
+                Informe a URL de uma imagem para personalizar a logo exibida no topo da barra lateral.
+              </p>
+              <input
+                type="url"
+                value={logoUrl}
+                onChange={(e) => { setLogoUrl(e.target.value); setSaved(false); }}
+                placeholder="https://seu-dominio.com/logo.png"
+                className="input-field"
+              />
+              {!!logoUrl.trim() && (
+                <img
+                  src={logoUrl}
+                  alt="Prévia da logo"
+                  className="mt-3 h-16 w-auto max-w-full object-contain rounded border border-gray-800 bg-gray-900 p-2"
+                />
+              )}
             </div>
 
             <div className="flex items-center gap-3">

@@ -142,6 +142,43 @@ export default function DashboardPage() {
     );
   }
 
+  const categoryPalette: Record<string, string> = {
+    vulnerability: '#ef4444',
+    exploit: '#f97316',
+    ransomware: '#a855f7',
+    fraud: '#eab308',
+    data_leak: '#ec4899',
+    malware: '#dc2626',
+    phishing: '#f59e0b',
+    supply_chain: '#3b82f6',
+    general: '#6b7280',
+  };
+
+  const categories = Object.entries(stats?.byCategoryCount || {})
+    .map(([slug, count]) => ({
+      slug,
+      label: categoryLabels[slug] || slug,
+      count,
+      color: categoryPalette[slug] || '#6b7280',
+      cardColor: categoryColors[slug] || 'bg-gray-800 border-gray-700',
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
+
+  const distributionGradient = categories.length
+    ? (() => {
+        let offset = 0;
+        const segments = categories.map((category) => {
+          const size = (category.count / totalCategoryCount) * 100;
+          const start = offset;
+          offset += size;
+          return `${category.color} ${start}% ${offset}%`;
+        });
+        return `conic-gradient(${segments.join(', ')})`;
+      })()
+    : 'none';
+
   return (
     <div className="flex min-h-screen">
       <Sidebar user={user} />
@@ -154,15 +191,15 @@ export default function DashboardPage() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <div className="card">
-                <p className="text-sm text-gray-400">Total de Itens</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total de Itens</p>
                 <p className="text-3xl font-bold text-cti-accent">{stats.totalItems.toLocaleString()}</p>
               </div>
               <div className="card">
-                <p className="text-sm text-gray-400">Hoje</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Hoje</p>
                 <p className="text-3xl font-bold text-cti-green">{stats.itemsToday}</p>
               </div>
               <div className="card">
-                <p className="text-sm text-gray-400">Esta Semana</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Esta Semana</p>
                 <p className="text-3xl font-bold text-cti-amber">{stats.itemsThisWeek}</p>
               </div>
             </div>
@@ -248,12 +285,12 @@ export default function DashboardPage() {
                   <Link
                     key={item.id}
                     href={`/feed/${item.id}`}
-                    className="block p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors border border-gray-800"
+                    className="block p-3 rounded-lg bg-white/75 hover:bg-white dark:bg-gray-800/45 dark:hover:bg-gray-800/70 transition-colors border border-gray-200/80 dark:border-gray-800/70 shadow-sm"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{item.title}</p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {item.source?.name || 'Desconhecido'} &middot; {new Date(item.collectedAt).toLocaleString()}
                         </p>
                       </div>
@@ -269,7 +306,7 @@ export default function DashboardPage() {
                   </Link>
                 ))}
                 {(stats.recentItems || []).length === 0 && (
-                  <p className="text-gray-500 text-sm text-center py-8">
+                  <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-8">
                     Nenhum item ainda. Configure fontes para começar a coletar dados de inteligência de ameaças.
                   </p>
                 )}

@@ -18,6 +18,26 @@ class DevLoginDto {
   email: string;
 }
 
+class PasswordLoginDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}
+
+class LocalLoginDto {
+  @IsString()
+  @IsNotEmpty()
+  username: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -30,12 +50,25 @@ export class AuthController {
     return this.authService.validateGoogleToken(dto.idToken);
   }
 
+  @Post('password-login')
+  async passwordLogin(@Body() dto: PasswordLoginDto) {
+    return this.authService.passwordLogin(dto.email, dto.password);
+  }
+
   @Post('dev-login')
   async devLogin(@Body() dto: DevLoginDto) {
     if (this.config.get('NODE_ENV') === 'production') {
       throw new UnauthorizedException('Não disponível em produção');
     }
     return this.authService.devLogin(dto.email);
+  }
+
+  @Post('local-login')
+  async localLogin(@Body() dto: LocalLoginDto) {
+    if (this.config.get('NODE_ENV') === 'production') {
+      throw new UnauthorizedException('Não disponível em produção');
+    }
+    return this.authService.localAdminLogin(dto.username, dto.password);
   }
 
   @Get('me')
