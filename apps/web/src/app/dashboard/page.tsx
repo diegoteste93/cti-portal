@@ -185,6 +185,8 @@ export default function DashboardPage() {
     return `/feed?${params.toString()}`;
   };
 
+  const brazilFeedHref = '/feed?br=1';
+
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -386,13 +388,17 @@ export default function DashboardPage() {
 
               <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <h4 className="mb-1 text-lg font-semibold">Eventos vinculados ao Brasil</h4>
-                <p className="mb-4 text-sm text-gray-500">Total de eventos com menção ao Brasil no período filtrado.</p>
+                <p className="mb-3 text-sm text-gray-500">Clique no mapa para abrir o feed já filtrado com eventos relacionados ao Brasil.</p>
 
-                <div className="relative mx-auto w-full max-w-[270px] rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-cyan-50 p-3 dark:border-emerald-900/50 dark:from-gray-900 dark:to-gray-800">
-                  <svg viewBox="0 0 220 220" className="h-48 w-full" role="img" aria-label="Mapa estilizado do Brasil com total de eventos">
+                <Link
+                  href={brazilFeedHref}
+                  aria-label="Abrir feed filtrado de eventos do Brasil"
+                  className="group relative mx-auto block w-full max-w-[290px] rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-cyan-50 p-3 transition hover:border-emerald-300 hover:shadow-md dark:border-emerald-900/50 dark:from-gray-900 dark:to-gray-800 dark:hover:border-emerald-700"
+                >
+                  <svg viewBox="0 0 220 220" className="h-48 w-full" role="img" aria-label="Mapa do Brasil com total de eventos">
                     <path
                       d="M78 20 L118 18 L142 38 L165 40 L186 68 L178 96 L190 122 L171 147 L168 178 L138 194 L114 182 L90 195 L67 176 L45 160 L41 132 L27 112 L35 88 L52 73 L58 48 Z"
-                      className="fill-emerald-500/80 stroke-emerald-700 dark:fill-emerald-600/70 dark:stroke-emerald-400"
+                      className="fill-emerald-500/85 stroke-emerald-700 dark:fill-emerald-600/75 dark:stroke-emerald-400"
                       strokeWidth="2"
                     />
                     <circle cx="112" cy="116" r="24" className="fill-white/95 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
@@ -400,9 +406,9 @@ export default function DashboardPage() {
                   </svg>
 
                   <div className="absolute right-3 top-3 rounded-md bg-white/90 px-2 py-1 text-xs font-semibold text-emerald-700 shadow-sm dark:bg-gray-900/90 dark:text-emerald-300">
-                    Total BR
+                    Ver no feed →
                   </div>
-                </div>
+                </Link>
               </div>
             </section>
 
