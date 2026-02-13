@@ -56,6 +56,43 @@ export default function DashboardPage() {
     general: 'bg-gray-100/70 border-gray-200/80 dark:bg-gray-800/40 dark:border-gray-700/70',
   };
 
+  const categoryPalette: Record<string, string> = {
+    vulnerability: '#ef4444',
+    exploit: '#f97316',
+    ransomware: '#a855f7',
+    fraud: '#eab308',
+    data_leak: '#ec4899',
+    malware: '#dc2626',
+    phishing: '#f59e0b',
+    supply_chain: '#3b82f6',
+    general: '#6b7280',
+  };
+
+  const categories = Object.entries(stats?.byCategoryCount || {})
+    .map(([slug, count]) => ({
+      slug,
+      label: categoryLabels[slug] || slug,
+      count,
+      color: categoryPalette[slug] || '#6b7280',
+      cardColor: categoryColors[slug] || 'bg-gray-800 border-gray-700',
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
+
+  const distributionGradient = categories.length
+    ? (() => {
+        let offset = 0;
+        const segments = categories.map((category) => {
+          const size = (category.count / totalCategoryCount) * 100;
+          const start = offset;
+          offset += size;
+          return `${category.color} ${start}% ${offset}%`;
+        });
+        return `conic-gradient(${segments.join(', ')})`;
+      })()
+    : 'none';
+
   return (
     <div className="flex min-h-screen">
       <Sidebar user={user} />
@@ -92,13 +129,27 @@ export default function DashboardPage() {
                       <span className="text-sm">{categoryLabels[slug] || slug}</span>
                       <span className="font-mono font-bold">{count}</span>
                     </div>
-                  ))}
+                  </div>
+                  <div className="space-y-2 text-sm w-full">
+                    {categories.slice(0, 4).map((category) => (
+                      <div key={`legend-${category.slug}`} className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: category.color }} />
+                          <span className="truncate">{category.label}</span>
+                        </div>
+                        <span className="font-mono text-gray-300">{category.count}</span>
+                      </div>
+                    ))}
+                    {categories.length > 4 && (
+                      <p className="text-xs text-gray-500">+{categories.length - 4} categorias adicionais</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-6 xl:col-span-3 grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {(stats.topCves || []).length > 0 && (
-                  <div className="card">
+                  <div className="card h-full">
                     <h3 className="text-lg font-semibold mb-3">CVEs em Destaque</h3>
                     <div className="flex flex-wrap gap-2">
                       {(stats.topCves || []).map((cve) => (
@@ -115,7 +166,7 @@ export default function DashboardPage() {
                 )}
 
                 {(stats.topTags || []).length > 0 && (
-                  <div className="card">
+                  <div className="card h-full">
                     <h3 className="text-lg font-semibold mb-3">Principais Tecnologias</h3>
                     <div className="flex flex-wrap gap-2">
                       {(stats.topTags || []).map((tag) => (
