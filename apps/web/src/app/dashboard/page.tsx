@@ -160,7 +160,6 @@ export default function DashboardPage() {
       label: categoryLabels[slug] || slug,
       count,
       color: categoryPalette[slug] || '#6b7280',
-      cardColor: categoryColors[slug] || 'bg-gray-800 border-gray-700',
     }))
     .sort((a, b) => b.count - a.count);
 
