@@ -87,8 +87,8 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user) {
       api
-        .get<DashboardStats>('/feed/dashboard')
-        .then(setStats)
+        .get('/feed/dashboard')
+        .then((response) => setStats(response as DashboardStats))
         .catch(console.error)
         .finally(() => setLoadingStats(false));
     }
@@ -173,7 +173,7 @@ export default function DashboardPage() {
                   title="Categorias (interativo)"
                   data={stats.byCategoryCount || {}}
                   labels={categoryLabels}
-                  hrefBuilder={(slug) => `/feed?category=${slug}`}
+                  hrefBuilder={(slug) => `/feed?categories=${slug}`}
                   emptyMessage="Sem dados de categorias ainda."
                   barColorClass="bg-gradient-to-r from-red-500 to-orange-500"
                 />
