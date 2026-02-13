@@ -114,7 +114,7 @@ export default function DashboardPage() {
       .map(([slug, count]) => ({ slug, count, label: categoryLabels[slug] || slug }));
   }, [stats]);
 
-  const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
+  const categoryCountTotal = categories.reduce((sum, category) => sum + category.count, 0);
 
   const chartMetrics = useMemo(() => ({
     avgDaily: Math.round((stats?.itemsThisWeek || 0) / 7),
@@ -247,7 +247,7 @@ export default function DashboardPage() {
                 <p className="mb-4 text-sm text-gray-500">Participação das principais categorias no período.</p>
                 <div className="space-y-3">
                   {categories.map((category) => {
-                    const width = totalCategoryCount ? Math.round((category.count / totalCategoryCount) * 100) : 0;
+                    const width = categoryCountTotal ? Math.round((category.count / categoryCountTotal) * 100) : 0;
                     return (
                       <div key={category.slug}>
                         <div className="mb-1 flex items-center justify-between text-sm">
@@ -281,8 +281,8 @@ export default function DashboardPage() {
                   <div className="space-y-2 text-sm">
                     {(categories.length ? categories : [{ label: 'Sem dados', count: 0 }]).map((item, index) => {
                       const colors = ['bg-sky-500', 'bg-teal-500', 'bg-violet-500', 'bg-slate-400', 'bg-red-500'];
-                      const pct = totalCategoryCount
-                        ? Math.round(((item as any).count / totalCategoryCount) * 100)
+                      const pct = categoryCountTotal
+                        ? Math.round(((item as any).count / categoryCountTotal) * 100)
                         : 0;
                       return (
                         <div key={`${item.label}-${index}`} className="flex items-center gap-2">
