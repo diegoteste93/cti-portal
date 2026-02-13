@@ -386,57 +386,22 @@ export default function DashboardPage() {
 
               <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <h4 className="mb-1 text-lg font-semibold">Eventos vinculados ao Brasil</h4>
-                <p className="mb-4 text-sm text-gray-500">Eventos detectados com menção ao Brasil no período filtrado. Clique em uma região para ver os itens relacionados.</p>
+                <p className="mb-4 text-sm text-gray-500">Total de eventos com menção ao Brasil no período filtrado.</p>
 
                 <div className="relative mx-auto w-full max-w-[270px] rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-cyan-50 p-3 dark:border-emerald-900/50 dark:from-gray-900 dark:to-gray-800">
-                  <svg viewBox="0 0 220 220" className="h-48 w-full" role="img" aria-label="Mapa estilizado do Brasil com eventos">
+                  <svg viewBox="0 0 220 220" className="h-48 w-full" role="img" aria-label="Mapa estilizado do Brasil com total de eventos">
                     <path
                       d="M78 20 L118 18 L142 38 L165 40 L186 68 L178 96 L190 122 L171 147 L168 178 L138 194 L114 182 L90 195 L67 176 L45 160 L41 132 L27 112 L35 88 L52 73 L58 48 Z"
                       className="fill-emerald-500/80 stroke-emerald-700 dark:fill-emerald-600/70 dark:stroke-emerald-400"
                       strokeWidth="2"
                     />
-                    <circle cx="106" cy="54" r="13" className="fill-white/90 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
-                    <text x="106" y="58" textAnchor="middle" className="fill-emerald-800 text-[10px] font-bold dark:fill-emerald-300">{brazilEvents.regions[0].value}</text>
-
-                    <circle cx="143" cy="84" r="14" className="fill-white/90 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
-                    <text x="143" y="88" textAnchor="middle" className="fill-emerald-800 text-[10px] font-bold dark:fill-emerald-300">{brazilEvents.regions[1].value}</text>
-
-                    <circle cx="108" cy="112" r="14" className="fill-white/90 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
-                    <text x="108" y="116" textAnchor="middle" className="fill-emerald-800 text-[10px] font-bold dark:fill-emerald-300">{brazilEvents.regions[2].value}</text>
-
-                    <circle cx="118" cy="146" r="16" className="fill-white/90 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
-                    <text x="118" y="150" textAnchor="middle" className="fill-emerald-800 text-[10px] font-bold dark:fill-emerald-300">{brazilEvents.regions[3].value}</text>
-
-                    <circle cx="88" cy="170" r="13" className="fill-white/90 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
-                    <text x="88" y="174" textAnchor="middle" className="fill-emerald-800 text-[10px] font-bold dark:fill-emerald-300">{brazilEvents.regions[4].value}</text>
+                    <circle cx="112" cy="116" r="24" className="fill-white/95 stroke-emerald-700 dark:fill-gray-900 dark:stroke-emerald-300" strokeWidth="2" />
+                    <text x="112" y="122" textAnchor="middle" className="fill-emerald-800 text-lg font-bold dark:fill-emerald-300">{brazilEvents.total}</text>
                   </svg>
 
                   <div className="absolute right-3 top-3 rounded-md bg-white/90 px-2 py-1 text-xs font-semibold text-emerald-700 shadow-sm dark:bg-gray-900/90 dark:text-emerald-300">
-                    Total BR: {brazilEvents.total}
+                    Total BR
                   </div>
-                </div>
-
-                <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 dark:text-gray-300">
-                  {brazilEvents.regions.map((region) => (
-                    <div key={region.label} className="rounded-md border border-gray-200 px-2 py-2 dark:border-gray-700">
-                      <div className="mb-1 font-medium">{region.label}: {region.value}</div>
-                      <div className="flex flex-wrap gap-1">
-                        {region.itemIds.length > 0 ? region.itemIds.map((id) => {
-                          const item = recentItemsById.get(id);
-                          if (!item) return null;
-                          return (
-                            <Link
-                              key={id}
-                              href={`/feed/${id}`}
-                              className="rounded bg-cyan-50 px-2 py-0.5 text-cyan-700 hover:underline dark:bg-cyan-900/40 dark:text-cyan-300"
-                            >
-                              {item.title.slice(0, 36)}
-                            </Link>
-                          );
-                        }) : <span className="text-gray-500">Sem itens mapeados</span>}
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
             </section>
