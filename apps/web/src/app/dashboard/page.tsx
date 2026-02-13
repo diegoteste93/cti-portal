@@ -45,15 +45,15 @@ export default function DashboardPage() {
   };
 
   const categoryColors: Record<string, string> = {
-    vulnerability: 'bg-red-50 border-red-200 dark:bg-red-900/50 dark:border-red-800',
-    exploit: 'bg-orange-50 border-orange-200 dark:bg-orange-900/50 dark:border-orange-800',
-    ransomware: 'bg-purple-50 border-purple-200 dark:bg-purple-900/50 dark:border-purple-800',
-    fraud: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/50 dark:border-yellow-800',
-    data_leak: 'bg-pink-50 border-pink-200 dark:bg-pink-900/50 dark:border-pink-800',
-    malware: 'bg-red-50 border-red-200 dark:bg-red-900/50 dark:border-red-800',
-    phishing: 'bg-amber-50 border-amber-200 dark:bg-amber-900/50 dark:border-amber-800',
-    supply_chain: 'bg-blue-50 border-blue-200 dark:bg-blue-900/50 dark:border-blue-800',
-    general: 'bg-gray-50 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700',
+    vulnerability: 'bg-red-100/60 border-red-200/80 dark:bg-red-900/30 dark:border-red-800/70',
+    exploit: 'bg-orange-100/60 border-orange-200/80 dark:bg-orange-900/30 dark:border-orange-800/70',
+    ransomware: 'bg-purple-100/60 border-purple-200/80 dark:bg-purple-900/30 dark:border-purple-800/70',
+    fraud: 'bg-yellow-100/60 border-yellow-200/80 dark:bg-yellow-900/30 dark:border-yellow-800/70',
+    data_leak: 'bg-pink-100/60 border-pink-200/80 dark:bg-pink-900/30 dark:border-pink-800/70',
+    malware: 'bg-red-100/60 border-red-200/80 dark:bg-red-900/30 dark:border-red-800/70',
+    phishing: 'bg-amber-100/60 border-amber-200/80 dark:bg-amber-900/30 dark:border-amber-800/70',
+    supply_chain: 'bg-blue-100/60 border-blue-200/80 dark:bg-blue-900/30 dark:border-blue-800/70',
+    general: 'bg-gray-100/70 border-gray-200/80 dark:bg-gray-800/40 dark:border-gray-700/70',
   };
 
   const categoryPalette: Record<string, string> = {
@@ -120,43 +120,12 @@ export default function DashboardPage() {
             </div>
 
             {/* Category breakdown */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
-              <div className="card xl:col-span-2">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Distribuição por Categoria</h3>
-                  <span className="text-xs text-gray-400">Total: {totalCategoryCount} eventos</span>
-                </div>
-
-                <div className="space-y-3">
-                  {categories.map((category) => {
-                    const percentage = totalCategoryCount ? (category.count / totalCategoryCount) * 100 : 0;
-                    return (
-                      <div key={category.slug} className={`rounded-lg border p-3 ${category.cardColor}`}>
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span>{category.label}</span>
-                          <span className="font-mono font-bold">{category.count} ({percentage.toFixed(1)}%)</span>
-                        </div>
-                        <div className="h-2 bg-gray-900/70 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{ width: `${Math.max(percentage, 3)}%`, backgroundColor: category.color }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {categories.length === 0 && (
-                    <p className="text-gray-500 text-sm text-center py-8">Sem dados de categoria para exibir.</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="card">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="card bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
                 <h3 className="text-lg font-semibold mb-4">Por Categoria</h3>
                 <div className="space-y-2">
                   {Object.entries(stats.byCategoryCount || {}).map(([slug, count]) => (
-                    <div key={slug} className={`flex justify-between items-center p-2 rounded border ${categoryColors[slug] || 'bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700'}`}>
+                    <div key={slug} className={`flex justify-between items-center p-2 rounded-lg border shadow-sm ${categoryColors[slug] || 'bg-gray-100/70 border-gray-200/80 dark:bg-gray-800/40 dark:border-gray-700/70'}`}>
                       <span className="text-sm">{categoryLabels[slug] || slug}</span>
                       <span className="font-mono font-bold">{count}</span>
                     </div>
@@ -226,7 +195,7 @@ export default function DashboardPage() {
                   <Link
                     key={item.id}
                     href={`/feed/${item.id}`}
-                    className="block p-3 rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-800"
+                    className="block p-3 rounded-lg bg-white/75 hover:bg-white dark:bg-gray-800/45 dark:hover:bg-gray-800/70 transition-colors border border-gray-200/80 dark:border-gray-800/70 shadow-sm"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
