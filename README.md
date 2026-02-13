@@ -119,6 +119,7 @@ Dicas:
 - Garanta que `NEXT_PUBLIC_API_URL` aponte para o host público correto da API.
 - Configure proxy reverso (Nginx/Traefik) com HTTPS para `web` e `api`.
 - Em produção, desative o login dev e mantenha apenas OIDC.
+- Arquivos enviados pela UI em `apps/web/public/uploads` agora persistem em volume Docker (`web_uploads`) após `docker compose down/up --build` (desde que não use `down -v`).
 
 ## Configuração Google OIDC
 

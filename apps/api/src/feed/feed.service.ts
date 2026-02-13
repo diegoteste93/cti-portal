@@ -193,10 +193,11 @@ export class FeedService {
         tagCount[tag] = (tagCount[tag] || 0) + 1;
       }
     }
-    const topTags = Object.entries(tagCount)
+    const topTagsEntries = Object.entries(tagCount)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([tag]) => tag);
+      .slice(0, 10);
+    const topTags = topTagsEntries.map(([tag]) => tag);
+    const topTagsCount = Object.fromEntries(topTagsEntries);
 
     // Recent items
     const recentItems = await this.itemRepo.find({
@@ -212,6 +213,7 @@ export class FeedService {
       byCategoryCount,
       topCves,
       topTags,
+      topTagsCount,
       recentItems,
     };
   }

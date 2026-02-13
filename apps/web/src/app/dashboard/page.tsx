@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import Sidebar from '@/components/Sidebar';
 import SeverityBadge from '@/components/SeverityBadge';
@@ -13,7 +13,70 @@ interface DashboardStats {
   byCategoryCount?: Record<string, number>;
   topCves?: string[];
   topTags?: string[];
+  topTagsCount?: Record<string, number>;
   recentItems?: any[];
+}
+
+interface BarChartProps {
+  title: string;
+  data: Record<string, number>;
+  labels?: Record<string, string>;
+  hrefBuilder: (key: string) => string;
+  emptyMessage: string;
+  barColorClass: string;
+}
+
+function InteractiveBarChart({
+  title,
+  data,
+  labels = {},
+  hrefBuilder,
+  emptyMessage,
+  barColorClass,
+}: BarChartProps) {
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+  const entries = Object.entries(data)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+
+  const maxValue = entries.length > 0 ? Math.max(...entries.map(([, value]) => value)) : 0;
+
+  return (
+    <div className="card">
+      <h3 className="text-lg font-semibold mb-4">{title}</h3>
+      {entries.length === 0 ? (
+        <p className="text-gray-500 text-sm">{emptyMessage}</p>
+      ) : (
+        <div className="space-y-2">
+          {entries.map(([key, value]) => {
+            const percentage = maxValue > 0 ? Math.max((value / maxValue) * 100, 4) : 0;
+            const isHovered = hoveredKey === key;
+
+            return (
+              <Link
+                key={key}
+                href={hrefBuilder(key)}
+                className="block rounded-lg border border-gray-800 bg-gray-900/50 p-2 hover:border-cti-accent transition-colors"
+                onMouseEnter={() => setHoveredKey(key)}
+                onMouseLeave={() => setHoveredKey((current) => (current === key ? null : current))}
+              >
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="truncate pr-2">{labels[key] || key}</span>
+                  <span className="font-mono font-semibold">{value}</span>
+                </div>
+                <div className="h-2 rounded bg-gray-800 overflow-hidden">
+                  <div
+                    className={`h-full rounded ${barColorClass} transition-all duration-300 ${isHovered ? 'opacity-100' : 'opacity-80'}`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function DashboardPage() {
@@ -23,14 +86,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user) {
-      api.get<DashboardStats>('/feed/dashboard')
-        .then(setStats)
+      api
+        .get('/feed/dashboard')
+        .then((response) => setStats(response as DashboardStats))
         .catch(console.error)
         .finally(() => setLoadingStats(false));
     }
   }, [user]);
-
-  if (loading || !user) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Carregando...</div></div>;
 
   const categoryLabels: Record<string, string> = {
     vulnerability: 'Vulnerabilidades',
@@ -44,17 +106,41 @@ export default function DashboardPage() {
     general: 'Geral',
   };
 
-  const categoryColors: Record<string, string> = {
-    vulnerability: 'bg-red-100/60 border-red-200/80 dark:bg-red-900/30 dark:border-red-800/70',
-    exploit: 'bg-orange-100/60 border-orange-200/80 dark:bg-orange-900/30 dark:border-orange-800/70',
-    ransomware: 'bg-purple-100/60 border-purple-200/80 dark:bg-purple-900/30 dark:border-purple-800/70',
-    fraud: 'bg-yellow-100/60 border-yellow-200/80 dark:bg-yellow-900/30 dark:border-yellow-800/70',
-    data_leak: 'bg-pink-100/60 border-pink-200/80 dark:bg-pink-900/30 dark:border-pink-800/70',
-    malware: 'bg-red-100/60 border-red-200/80 dark:bg-red-900/30 dark:border-red-800/70',
-    phishing: 'bg-amber-100/60 border-amber-200/80 dark:bg-amber-900/30 dark:border-amber-800/70',
-    supply_chain: 'bg-blue-100/60 border-blue-200/80 dark:bg-blue-900/30 dark:border-blue-800/70',
-    general: 'bg-gray-100/70 border-gray-200/80 dark:bg-gray-800/40 dark:border-gray-700/70',
-  };
+  const categorySummary = useMemo(() => {
+    const entries = Object.entries(stats?.byCategoryCount || {});
+    const total = entries.reduce((acc, [, count]) => acc + count, 0);
+    const top = entries.sort((a, b) => b[1] - a[1])[0];
+
+    if (!top || total === 0) return null;
+
+    return {
+      label: categoryLabels[top[0]] || top[0],
+      count: top[1],
+      percentage: Math.round((top[1] / total) * 100),
+    };
+  }, [stats]);
+
+  const topTechSummary = useMemo(() => {
+    const entries = Object.entries(stats?.topTagsCount || {});
+    const total = entries.reduce((acc, [, count]) => acc + count, 0);
+    const top = entries.sort((a, b) => b[1] - a[1])[0];
+
+    if (!top || total === 0) return null;
+
+    return {
+      tag: top[0],
+      count: top[1],
+      percentage: Math.round((top[1] / total) * 100),
+    };
+  }, [stats]);
+
+  if (loading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-gray-500">Carregando...</div>
+      </div>
+    );
+  }
 
   const categoryPalette: Record<string, string> = {
     vulnerability: '#ef4444',
@@ -103,7 +189,6 @@ export default function DashboardPage() {
           <div className="text-gray-500">Carregando estatísticas...</div>
         ) : stats ? (
           <>
-            {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <div className="card">
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total de Itens</p>
@@ -119,76 +204,81 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Category breakdown */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="card bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
-                <h3 className="text-lg font-semibold mb-4">Por Categoria</h3>
-                <div className="space-y-2">
-                  {Object.entries(stats.byCategoryCount || {}).map(([slug, count]) => (
-                    <div key={slug} className={`flex justify-between items-center p-2 rounded-lg border shadow-sm ${categoryColors[slug] || 'bg-gray-100/70 border-gray-200/80 dark:bg-gray-800/40 dark:border-gray-700/70'}`}>
-                      <span className="text-sm">{categoryLabels[slug] || slug}</span>
-                      <span className="font-mono font-bold">{count}</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2 text-sm w-full">
-                    {categories.slice(0, 4).map((category) => (
-                      <div key={`legend-${category.slug}`} className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: category.color }} />
-                          <span className="truncate">{category.label}</span>
-                        </div>
-                        <span className="font-mono text-gray-300">{category.count}</span>
-                      </div>
-                    ))}
-                    {categories.length > 4 && (
-                      <p className="text-xs text-gray-500">+{categories.length - 4} categorias adicionais</p>
-                    )}
-                  </div>
-                </div>
+              <div className="space-y-4">
+                <InteractiveBarChart
+                  title="Categorias (interativo)"
+                  data={stats.byCategoryCount || {}}
+                  labels={categoryLabels}
+                  hrefBuilder={(slug) => `/feed?categories=${slug}`}
+                  emptyMessage="Sem dados de categorias ainda."
+                  barColorClass="bg-gradient-to-r from-red-500 to-orange-500"
+                />
+                {categorySummary && (
+                  <p className="text-xs text-gray-400">
+                    Categoria líder: <span className="text-white font-medium">{categorySummary.label}</span> ({categorySummary.count} itens, {categorySummary.percentage}% do total).
+                  </p>
+                )}
               </div>
 
-              <div className="space-y-6 xl:col-span-3 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {(stats.topCves || []).length > 0 && (
-                  <div className="card h-full">
-                    <h3 className="text-lg font-semibold mb-3">CVEs em Destaque</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {(stats.topCves || []).map((cve) => (
-                        <Link
-                          key={cve}
-                          href={`/feed?cve=${cve}`}
-                          className="badge badge-critical hover:opacity-80 transition-opacity"
-                        >
-                          {cve}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {(stats.topTags || []).length > 0 && (
-                  <div className="card h-full">
-                    <h3 className="text-lg font-semibold mb-3">Principais Tecnologias</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {(stats.topTags || []).map((tag) => (
-                        <Link
-                          key={tag}
-                          href={`/feed?tags=${tag}`}
-                          className="badge badge-tag hover:opacity-80 transition-opacity"
-                        >
-                          {tag}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
+              <div className="space-y-4">
+                <InteractiveBarChart
+                  title="Tecnologias (interativo)"
+                  data={stats.topTagsCount || {}}
+                  hrefBuilder={(tag) => `/feed?tags=${tag}`}
+                  emptyMessage="Sem tags de tecnologia suficientes para exibir gráfico."
+                  barColorClass="bg-gradient-to-r from-cyan-500 to-blue-500"
+                />
+                {topTechSummary && (
+                  <p className="text-xs text-gray-400">
+                    Tecnologia mais citada: <span className="text-white font-medium">{topTechSummary.tag}</span> ({topTechSummary.count} menções, {topTechSummary.percentage}% entre as top 10).
+                  </p>
                 )}
               </div>
             </div>
 
-            {/* Recent items */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {(stats.topCves || []).length > 0 && (
+                <div className="card">
+                  <h3 className="text-lg font-semibold mb-3">CVEs em Destaque</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {(stats.topCves || []).map((cve) => (
+                      <Link
+                        key={cve}
+                        href={`/feed?cve=${cve}`}
+                        className="badge badge-critical hover:opacity-80 transition-opacity"
+                      >
+                        {cve}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(stats.topTags || []).length > 0 && (
+                <div className="card">
+                  <h3 className="text-lg font-semibold mb-3">Principais Tecnologias</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {(stats.topTags || []).map((tag) => (
+                      <Link
+                        key={tag}
+                        href={`/feed?tags=${tag}`}
+                        className="badge badge-tag hover:opacity-80 transition-opacity"
+                      >
+                        {tag}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="card">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Itens Recentes</h3>
-                <Link href="/feed" className="text-sm text-cti-accent hover:underline">Ver todos</Link>
+                <Link href="/feed" className="text-sm text-cti-accent hover:underline">
+                  Ver todos
+                </Link>
               </div>
               <div className="space-y-3">
                 {(stats.recentItems || []).map((item: any) => (
@@ -207,7 +297,9 @@ export default function DashboardPage() {
                       <div className="flex gap-1 flex-shrink-0">
                         <SeverityBadge severity={item.severity} />
                         {item.categories?.map((c: any) => (
-                          <span key={c.id} className="badge badge-category">{c.name}</span>
+                          <span key={c.id} className="badge badge-category">
+                            {c.name}
+                          </span>
                         ))}
                       </div>
                     </div>
