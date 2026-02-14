@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { SourcesService } from './sources.service';
 import { CurrentUser, Roles } from '../common/decorators';
@@ -43,5 +43,12 @@ export class SourcesController {
   @Roles(Role.ADMIN, Role.CTI_EDITOR)
   triggerFetch(@Param('id') id: string, @CurrentUser() actor: User) {
     return this.sourcesService.triggerFetch(id, actor.id);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  delete(@Param('id') id: string, @CurrentUser() actor: User) {
+    return this.sourcesService.delete(id, actor.id);
   }
 }
