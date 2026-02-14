@@ -23,7 +23,12 @@ export class FeedController {
   }
 
   @Get('dashboard')
-  getDashboardStats(@CurrentUser() user: User) {
-    return this.feedService.getDashboardStats(user);
+  getDashboardStats(
+    @CurrentUser() user: User,
+    @Query('range') range?: '1h' | '24h' | '7d' | '30d' | 'custom',
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.feedService.getDashboardStats(user, range, from, to);
   }
 }
