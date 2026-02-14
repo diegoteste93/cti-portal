@@ -171,29 +171,42 @@ export default function DashboardPage() {
     ],
   };
 
+  const categoryPalette: Record<string, string> = {
+    vulnerability: '#ef4444',
+    exploit: '#f97316',
+    ransomware: '#a855f7',
+    fraud: '#eab308',
+    data_leak: '#ec4899',
+    malware: '#dc2626',
+    phishing: '#f59e0b',
+    supply_chain: '#3b82f6',
+    general: '#6b7280',
+  };
+
+  const categories = Object.entries(stats?.byCategoryCount || {})
+    .map(([slug, count]) => ({
+      slug,
+      label: categoryLabels[slug] || slug,
+      count,
+      color: categoryPalette[slug] || '#6b7280',
+      cardColor: categoryColors[slug] || 'bg-gray-800 border-gray-700',
+    }))
+    .sort((a, b) => b.count - a.count);
+
   const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
 
-  const buildTagFeedHref = (tag: string) => {
-    const params = new URLSearchParams();
-    params.set('tags', tag);
-    return `/feed?${params.toString()}`;
-  };
-
-  const buildCategoryFeedHref = (slug: string) => {
-    const params = new URLSearchParams();
-    params.set('categories', slug);
-    return `/feed?${params.toString()}`;
-  };
-
-  const brazilFeedHref = '/feed?br=1';
-
-  if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-gray-500">Carregando...</div>
-      </div>
-    );
-  }
+  const distributionGradient = categories.length
+    ? (() => {
+        let offset = 0;
+        const segments = categories.map((category) => {
+          const size = (category.count / totalCategoryCount) * 100;
+          const start = offset;
+          offset += size;
+          return `${category.color} ${start}% ${offset}%`;
+        });
+        return `conic-gradient(${segments.join(', ')})`;
+      })()
+    : 'none';
 
   return (
     <div className="flex min-h-screen">
@@ -322,66 +335,100 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <h4 className="mb-4 text-lg font-semibold">Categorias mais monitoradas</h4>
-                <p className="mb-4 text-sm text-gray-500">Participação das principais categorias no período.</p>
+            {/* Category breakdown */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+              <div className="card xl:col-span-2">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Distribuição por Categoria</h3>
+                  <span className="text-xs text-gray-400">Total: {totalCategoryCount} eventos</span>
+                </div>
+
                 <div className="space-y-3">
                   {categories.map((category) => {
-                    const width = categoryCountTotal ? Math.round((category.count / categoryCountTotal) * 100) : 0;
+                    const percentage = totalCategoryCount ? (category.count / totalCategoryCount) * 100 : 0;
                     return (
-                      <div key={category.slug}>
-                        <div className="mb-1 flex items-center justify-between text-sm">
-                          <Link href={buildCategoryFeedHref(category.slug)} className="text-gray-600 hover:text-cyan-600 hover:underline dark:text-gray-300 dark:hover:text-cyan-400">{category.label}</Link>
-                          <span className="font-semibold">{category.count}</span>
+                      <div key={category.slug} className={`rounded-lg border p-3 ${category.cardColor}`}>
+                        <div className="flex items-center justify-between text-sm mb-2">
+                          <span>{category.label}</span>
+                          <span className="font-mono font-bold">{category.count} ({percentage.toFixed(1)}%)</span>
                         </div>
-                        <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-800">
-                          <div className="h-2 rounded-full bg-cyan-500" style={{ width: `${Math.max(width, 8)}%` }} />
+                        <div className="h-2 bg-gray-900/70 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{ width: `${Math.max(percentage, 3)}%`, backgroundColor: category.color }}
+                          />
                         </div>
                       </div>
                     );
                   })}
-                  {categories.length === 0 && <p className="text-sm text-gray-500">Sem categorias para exibir.</p>}
+
+                  {categories.length === 0 && (
+                    <p className="text-gray-500 text-sm text-center py-8">Sem dados de categoria para exibir.</p>
+                  )}
                 </div>
               </div>
 
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <h4 className="mb-4 text-lg font-semibold">Distribuição percentual por categoria</h4>
+              <div className="card">
+                <h3 className="text-lg font-semibold mb-4">Visão Rápida</h3>
                 <div className="flex items-center gap-4">
-                  <div
-                    className="h-36 w-36 rounded-full"
-                    style={{
-                      background:
-                        categories.length > 0
-                          ? `conic-gradient(#0ea5e9 0% 35%, #14b8a6 35% 60%, #8b5cf6 60% 75%, #94a3b8 75% 90%, #ef4444 90% 100%)`
-                          : '#e5e7eb',
-                    }}
-                  >
-                    <div className="m-7 h-22 w-22 rounded-full bg-white dark:bg-gray-900" />
+                  <div className="relative w-28 h-28 flex-shrink-0">
+                    <div
+                      className="w-full h-full rounded-full"
+                      style={{ background: distributionGradient }}
+                    />
+                    <div className="absolute inset-4 rounded-full bg-gray-900 border border-gray-700 flex items-center justify-center text-xs text-gray-300 text-center px-1">
+                      Categorias
+                    </div>
                   </div>
-                  <div className="space-y-2 text-sm">
-                    {(categories.length ? categories : [{ label: 'Sem dados', count: 0 }]).map((item, index) => {
-                      const colors = ['bg-sky-500', 'bg-teal-500', 'bg-violet-500', 'bg-slate-400', 'bg-red-500'];
-                      const pct = categoryCountTotal
-                        ? Math.round(((item as any).count / categoryCountTotal) * 100)
-                        : 0;
-                      return (
-                        <div key={`${item.label}-${index}`} className="flex items-center gap-2">
-                          <span className={`h-2.5 w-2.5 rounded-full ${colors[index] || 'bg-gray-500'}`} />
-                          {'slug' in (item as any) ? (
-                            <Link
-                              href={buildCategoryFeedHref((item as any).slug)}
-                              className="text-gray-600 hover:text-cyan-600 hover:underline dark:text-gray-300 dark:hover:text-cyan-400"
-                            >
-                              {item.label}
-                            </Link>
-                          ) : (
-                            <span className="text-gray-600 dark:text-gray-300">{item.label}</span>
-                          )}
-                          <span className="font-semibold">{pct}%</span>
+                  <div className="space-y-2 text-sm w-full">
+                    {categories.slice(0, 4).map((category) => (
+                      <div key={`legend-${category.slug}`} className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: category.color }} />
+                          <span className="truncate">{category.label}</span>
                         </div>
-                      );
-                    })}
+                        <span className="font-mono text-gray-300">{category.count}</span>
+                      </div>
+                    ))}
+                    {categories.length > 4 && (
+                      <p className="text-xs text-gray-500">+{categories.length - 4} categorias adicionais</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6 xl:col-span-3 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {(stats.topCves || []).length > 0 && (
+                  <div className="card h-full">
+                    <h3 className="text-lg font-semibold mb-3">CVEs em Destaque</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {(stats.topCves || []).map((cve) => (
+                        <Link
+                          key={cve}
+                          href={`/feed?cve=${cve}`}
+                          className="badge badge-critical hover:opacity-80 transition-opacity"
+                        >
+                          {cve}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(stats.topTags || []).length > 0 && (
+                  <div className="card h-full">
+                    <h3 className="text-lg font-semibold mb-3">Principais Tecnologias</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {(stats.topTags || []).map((tag) => (
+                        <Link
+                          key={tag}
+                          href={`/feed?tags=${tag}`}
+                          className="badge badge-tag hover:opacity-80 transition-opacity"
+                        >
+                          {tag}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

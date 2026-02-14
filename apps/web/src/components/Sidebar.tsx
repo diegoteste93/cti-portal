@@ -8,7 +8,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 const nav = [
   { href: '/dashboard', label: 'Painel', icon: '□' },
   { href: '/feed', label: 'Feed', icon: '◈' },
-  { href: '/preferences', label: 'Meu Feed', icon: '☆' },
+  { href: '/preferences', label: 'Minhas Preferências', icon: '☆' },
 ];
 
 const adminNav = [
