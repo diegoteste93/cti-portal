@@ -58,10 +58,7 @@ function FeedContent() {
   const [usePersonalized, setUsePersonalized] = useState(true);
   const [categories, setCategories] = useState<{id: string; name: string; slug: string}[]>([]);
 
-  const brazilSearchClause = '(Brasil OR brasileiro OR brasileira OR LGPD OR ANPD OR gov.br OR pix OR CPF OR CNPJ)';
-  const effectiveSearch = onlyBrazil
-    ? (search ? `(${search}) AND ${brazilSearchClause}` : brazilSearchClause)
-    : search;
+  const effectiveSearch = search;
 
   useEffect(() => {
     setSearch(searchParams.get('search') || searchParams.get('q') || '');
@@ -110,7 +107,7 @@ function FeedContent() {
       params.set('page', String(p));
       params.set('limit', '20');
 
-      const endpoint = usePersonalized && !search && !category && !tag && !country && !cve && !severity
+      const endpoint = usePersonalized && !onlyBrazil && !effectiveSearch && !category && !tag && !cve && !severity
         ? '/feed'
         : '/items';
 

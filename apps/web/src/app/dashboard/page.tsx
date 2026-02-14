@@ -195,15 +195,19 @@ export default function DashboardPage() {
     general: '#6b7280',
   };
 
-  const categories = Object.entries(stats?.byCategoryCount || {})
-    .map(([slug, count]) => ({
-      slug,
-      label: categoryLabels[slug] || slug,
-      count,
-      color: categoryPalette[slug] || '#6b7280',
-      cardColor: categoryColors[slug] || 'bg-gray-800 border-gray-700',
-    }))
-    .sort((a, b) => b.count - a.count);
+  const buildTagFeedHref = (tag: string) => {
+    const params = new URLSearchParams();
+    params.set('tags', tag);
+    return `/feed?${params.toString()}`;
+  };
+
+  const buildCategoryFeedHref = (slug: string) => {
+    const params = new URLSearchParams();
+    params.set('categories', slug);
+    return `/feed?${params.toString()}`;
+  };
+
+  const brazilFeedHref = '/feed?br=1';
 
   const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
 
@@ -359,10 +363,10 @@ export default function DashboardPage() {
                   {categories.map((category) => {
                     const percentage = totalCategoryCount ? (category.count / totalCategoryCount) * 100 : 0;
                     return (
-                      <div key={category.slug} className={`rounded-lg border p-3 ${category.cardColor}`}>
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span>{category.label}</span>
-                          <span className="font-mono font-bold">{category.count} ({percentage.toFixed(1)}%)</span>
+                      <div key={category.slug}>
+                        <div className="mb-1 flex items-center justify-between text-sm">
+                          <Link href={buildCategoryFeedHref(category.slug)} className="text-gray-600 hover:text-cyan-600 hover:underline dark:text-gray-300 dark:hover:text-cyan-400">{category.label}</Link>
+                          <span className="font-semibold">{category.count}</span>
                         </div>
                         <div className="h-2 bg-gray-900/70 rounded-full overflow-hidden">
                           <div
@@ -392,12 +396,26 @@ export default function DashboardPage() {
                       Categorias
                     </div>
                   </div>
-                  <div className="space-y-2 text-sm w-full">
-                    {categories.slice(0, 4).map((category) => (
-                      <div key={`legend-${category.slug}`} className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: category.color }} />
-                          <span className="truncate">{category.label}</span>
+                  <div className="space-y-2 text-sm">
+                    {(categories.length ? categories : [{ label: 'Sem dados', count: 0 }]).map((item, index) => {
+                      const colors = ['bg-sky-500', 'bg-teal-500', 'bg-violet-500', 'bg-slate-400', 'bg-red-500'];
+                      const pct = categoryCountTotal
+                        ? Math.round(((item as any).count / categoryCountTotal) * 100)
+                        : 0;
+                      return (
+                        <div key={`${item.label}-${index}`} className="flex items-center gap-2">
+                          <span className={`h-2.5 w-2.5 rounded-full ${colors[index] || 'bg-gray-500'}`} />
+                          {'slug' in (item as any) ? (
+                            <Link
+                              href={buildCategoryFeedHref((item as any).slug)}
+                              className="text-gray-600 hover:text-cyan-600 hover:underline dark:text-gray-300 dark:hover:text-cyan-400"
+                            >
+                              {item.label}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-600 dark:text-gray-300">{item.label}</span>
+                          )}
+                          <span className="font-semibold">{pct}%</span>
                         </div>
                         <span className="font-mono text-gray-300">{category.count}</span>
                       </div>
