@@ -46,10 +46,11 @@ function FeedContent() {
   const [loading, setLoading] = useState(true);
 
   // Filter states
-  const [search, setSearch] = useState(searchParams.get('search') || '');
-  const [category, setCategory] = useState(searchParams.get('categories') || '');
-  const [tag, setTag] = useState(searchParams.get('tags') || '');
-  const [cve, setCve] = useState(searchParams.get('cve') || '');
+  const [search, setSearch] = useState(searchParams.get('search') || searchParams.get('q') || '');
+  const [category, setCategory] = useState(searchParams.get('categories') || searchParams.get('category') || '');
+  const [tag, setTag] = useState(searchParams.get('tags') || searchParams.get('tag') || '');
+  const [country, setCountry] = useState(searchParams.get('country') || searchParams.get('pais') || '');
+  const [cve, setCve] = useState(searchParams.get('cve') || searchParams.get('cves') || '');
   const [severity, setSeverity] = useState(searchParams.get('severity') || '');
   const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || '');
   const [dateTo, setDateTo] = useState(searchParams.get('dateTo') || '');
@@ -58,6 +59,28 @@ function FeedContent() {
   const [categories, setCategories] = useState<{id: string; name: string; slug: string}[]>([]);
 
   const effectiveSearch = search;
+
+  useEffect(() => {
+    setSearch(searchParams.get('search') || searchParams.get('q') || '');
+    setCategory(searchParams.get('categories') || searchParams.get('category') || '');
+    setTag(searchParams.get('tags') || searchParams.get('tag') || '');
+    setCountry(searchParams.get('country') || searchParams.get('pais') || '');
+    setCve(searchParams.get('cve') || searchParams.get('cves') || '');
+    setSeverity(searchParams.get('severity') || '');
+    setDateFrom(searchParams.get('dateFrom') || '');
+    setDateTo(searchParams.get('dateTo') || '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    setSearch(searchParams.get('search') || searchParams.get('q') || '');
+    setCategory(searchParams.get('categories') || searchParams.get('category') || '');
+    setTag(searchParams.get('tags') || searchParams.get('tag') || '');
+    setCountry(searchParams.get('country') || searchParams.get('pais') || '');
+    setCve(searchParams.get('cve') || searchParams.get('cves') || '');
+    setSeverity(searchParams.get('severity') || '');
+    setDateFrom(searchParams.get('dateFrom') || '');
+    setDateTo(searchParams.get('dateTo') || '');
+  }, [searchParams]);
 
   useEffect(() => {
     if (user) {
@@ -71,7 +94,11 @@ function FeedContent() {
       const params = new URLSearchParams();
       if (effectiveSearch) params.set('search', effectiveSearch);
       if (category) params.set('categories', category);
-      if (tag) params.set('tags', tag);
+      if (tag || country) {
+        const mergedTags = [tag, country].filter(Boolean).join(',');
+        params.set('tags', mergedTags);
+      }
+      if (country) params.set('country', country);
       if (cve) params.set('cve', cve);
       if (severity) params.set('severity', severity);
       if (dateFrom) params.set('dateFrom', dateFrom);
@@ -94,7 +121,7 @@ function FeedContent() {
     } finally {
       setLoading(false);
     }
-  }, [effectiveSearch, category, tag, cve, severity, dateFrom, dateTo, onlyBrazil, usePersonalized]);
+  }, [search, category, tag, country, cve, severity, dateFrom, dateTo, usePersonalized]);
 
   useEffect(() => {
     if (user) fetchItems();
@@ -108,18 +135,9 @@ function FeedContent() {
   };
 
   const clearFilters = () => {
-    setSearch(''); setCategory(''); setTag(''); setCve(''); setSeverity('');
+    setSearch(''); setCategory(''); setTag(''); setCountry(''); setCve(''); setSeverity('');
     setDateFrom(''); setDateTo('');
-    setOnlyBrazil(false);
-  };
-
-  const toggleBrazilOnly = () => {
-    const next = !onlyBrazil;
-    setOnlyBrazil(next);
-    const nextParams = new URLSearchParams(searchParams.toString());
-    if (next) nextParams.set('br', '1');
-    else nextParams.delete('br');
-    router.replace(`/feed?${nextParams.toString()}`);
+    router.replace('/feed');
   };
 
   return (
@@ -176,6 +194,14 @@ function FeedContent() {
                 placeholder="Tag de tecnologia..."
                 className="input-field w-40"
               />
+
+              <select value={country} onChange={(e) => setCountry(e.target.value)} className="input-field w-auto">
+                <option value="">Todos os Países</option>
+                <option value="BR">Brasil (BR)</option>
+                <option value="US">Estados Unidos (US)</option>
+                <option value="EU">Europa (EU)</option>
+                <option value="LATAM">Latam</option>
+              </select>
 
               <input
                 type="text"

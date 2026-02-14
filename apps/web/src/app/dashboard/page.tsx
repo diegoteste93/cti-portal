@@ -150,6 +150,10 @@ export default function DashboardPage() {
 
   const categoryCountTotal = categories.reduce((sum, category) => sum + category.count, 0);
 
+  const recentItemsById = useMemo(() => {
+    return new Map((stats?.recentItems || []).map((item: any) => [item.id, item]));
+  }, [stats?.recentItems]);
+
   const chartMetrics = useMemo(() => ({
     avgDaily: Math.round((stats?.itemsThisWeek || 0) / 7),
     areaA: buildAreaPath(timeline.seriesA, 640, 240),
@@ -167,7 +171,29 @@ export default function DashboardPage() {
     ],
   };
 
-  const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
+  const categoryPalette: Record<string, string> = {
+    vulnerability: '#ef4444',
+    exploit: '#f97316',
+    ransomware: '#a855f7',
+    fraud: '#eab308',
+    data_leak: '#ec4899',
+    malware: '#dc2626',
+    phishing: '#f59e0b',
+    supply_chain: '#3b82f6',
+    general: '#6b7280',
+  };
+
+  const categoryPalette: Record<string, string> = {
+    vulnerability: '#ef4444',
+    exploit: '#f97316',
+    ransomware: '#a855f7',
+    fraud: '#eab308',
+    data_leak: '#ec4899',
+    malware: '#dc2626',
+    phishing: '#f59e0b',
+    supply_chain: '#3b82f6',
+    general: '#6b7280',
+  };
 
   const buildTagFeedHref = (tag: string) => {
     const params = new URLSearchParams();
@@ -183,13 +209,20 @@ export default function DashboardPage() {
 
   const brazilFeedHref = '/feed?br=1';
 
-  if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-gray-500">Carregando...</div>
-      </div>
-    );
-  }
+  const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
+
+  const distributionGradient = categories.length
+    ? (() => {
+        let offset = 0;
+        const segments = categories.map((category) => {
+          const size = (category.count / totalCategoryCount) * 100;
+          const start = offset;
+          offset += size;
+          return `${category.color} ${start}% ${offset}%`;
+        });
+        return `conic-gradient(${segments.join(', ')})`;
+      })()
+    : 'none';
 
   return (
     <div className="flex min-h-screen">
@@ -318,42 +351,50 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <h4 className="mb-4 text-lg font-semibold">Categorias mais monitoradas</h4>
-                <p className="mb-4 text-sm text-gray-500">Participação das principais categorias no período.</p>
+            {/* Category breakdown */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+              <div className="card xl:col-span-2">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Distribuição por Categoria</h3>
+                  <span className="text-xs text-gray-400">Total: {totalCategoryCount} eventos</span>
+                </div>
+
                 <div className="space-y-3">
                   {categories.map((category) => {
-                    const width = categoryCountTotal ? Math.round((category.count / categoryCountTotal) * 100) : 0;
+                    const percentage = totalCategoryCount ? (category.count / totalCategoryCount) * 100 : 0;
                     return (
                       <div key={category.slug}>
                         <div className="mb-1 flex items-center justify-between text-sm">
                           <Link href={buildCategoryFeedHref(category.slug)} className="text-gray-600 hover:text-cyan-600 hover:underline dark:text-gray-300 dark:hover:text-cyan-400">{category.label}</Link>
                           <span className="font-semibold">{category.count}</span>
                         </div>
-                        <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-800">
-                          <div className="h-2 rounded-full bg-cyan-500" style={{ width: `${Math.max(width, 8)}%` }} />
+                        <div className="h-2 bg-gray-900/70 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{ width: `${Math.max(percentage, 3)}%`, backgroundColor: category.color }}
+                          />
                         </div>
                       </div>
                     );
                   })}
-                  {categories.length === 0 && <p className="text-sm text-gray-500">Sem categorias para exibir.</p>}
+
+                  {categories.length === 0 && (
+                    <p className="text-gray-500 text-sm text-center py-8">Sem dados de categoria para exibir.</p>
+                  )}
                 </div>
               </div>
 
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <h4 className="mb-4 text-lg font-semibold">Distribuição percentual por categoria</h4>
+              <div className="card">
+                <h3 className="text-lg font-semibold mb-4">Visão Rápida</h3>
                 <div className="flex items-center gap-4">
-                  <div
-                    className="h-36 w-36 rounded-full"
-                    style={{
-                      background:
-                        categories.length > 0
-                          ? `conic-gradient(#0ea5e9 0% 35%, #14b8a6 35% 60%, #8b5cf6 60% 75%, #94a3b8 75% 90%, #ef4444 90% 100%)`
-                          : '#e5e7eb',
-                    }}
-                  >
-                    <div className="m-7 h-22 w-22 rounded-full bg-white dark:bg-gray-900" />
+                  <div className="relative w-28 h-28 flex-shrink-0">
+                    <div
+                      className="w-full h-full rounded-full"
+                      style={{ background: distributionGradient }}
+                    />
+                    <div className="absolute inset-4 rounded-full bg-gray-900 border border-gray-700 flex items-center justify-center text-xs text-gray-300 text-center px-1">
+                      Categorias
+                    </div>
                   </div>
                   <div className="space-y-2 text-sm">
                     {(categories.length ? categories : [{ label: 'Sem dados', count: 0 }]).map((item, index) => {
@@ -376,8 +417,48 @@ export default function DashboardPage() {
                           )}
                           <span className="font-semibold">{pct}%</span>
                         </div>
-                      );
-                    })}
+                        <span className="font-mono text-gray-300">{category.count}</span>
+                      </div>
+                    ))}
+                    {categories.length > 4 && (
+                      <p className="text-xs text-gray-500">+{categories.length - 4} categorias adicionais</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6 xl:col-span-3 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {(stats.topCves || []).length > 0 && (
+                  <div className="card h-full">
+                    <h3 className="text-lg font-semibold mb-3">CVEs em Destaque</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {(stats.topCves || []).map((cve) => (
+                        <Link
+                          key={cve}
+                          href={`/feed?cve=${cve}`}
+                          className="badge badge-critical hover:opacity-80 transition-opacity"
+                        >
+                          {cve}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(stats.topTags || []).length > 0 && (
+                  <div className="card h-full">
+                    <h3 className="text-lg font-semibold mb-3">Principais Tecnologias</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {(stats.topTags || []).map((tag) => (
+                        <Link
+                          key={tag}
+                          href={`/feed?tags=${tag}`}
+                          className="badge badge-tag hover:opacity-80 transition-opacity"
+                        >
+                          {tag}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
