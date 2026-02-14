@@ -54,8 +54,14 @@ function FeedContent() {
   const [severity, setSeverity] = useState(searchParams.get('severity') || '');
   const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || '');
   const [dateTo, setDateTo] = useState(searchParams.get('dateTo') || '');
+  const [onlyBrazil, setOnlyBrazil] = useState(searchParams.get('br') === '1');
   const [usePersonalized, setUsePersonalized] = useState(true);
   const [categories, setCategories] = useState<{id: string; name: string; slug: string}[]>([]);
+
+  const brazilSearchClause = '(Brasil OR brasileiro OR brasileira OR LGPD OR ANPD OR gov.br OR pix OR CPF OR CNPJ)';
+  const effectiveSearch = onlyBrazil
+    ? (search ? `(${search}) AND ${brazilSearchClause}` : brazilSearchClause)
+    : search;
 
   useEffect(() => {
     setSearch(searchParams.get('search') || searchParams.get('q') || '');
@@ -78,7 +84,7 @@ function FeedContent() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (search) params.set('search', search);
+      if (effectiveSearch) params.set('search', effectiveSearch);
       if (category) params.set('categories', category);
       if (tag || country) {
         const mergedTags = [tag, country].filter(Boolean).join(',');
@@ -89,6 +95,7 @@ function FeedContent() {
       if (severity) params.set('severity', severity);
       if (dateFrom) params.set('dateFrom', dateFrom);
       if (dateTo) params.set('dateTo', dateTo);
+      if (onlyBrazil) params.set('br', '1');
       params.set('page', String(p));
       params.set('limit', '20');
 
@@ -130,7 +137,7 @@ function FeedContent() {
       <Sidebar user={user} />
       <main className="flex-1 overflow-auto">
         {/* Filters bar */}
-        <div className="sticky top-0 z-10 bg-gray-950 border-b border-gray-800 p-4">
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 dark:bg-gray-900 dark:border-gray-800">
           <form onSubmit={handleSearch} className="space-y-3">
             <div className="flex gap-3">
               <input
@@ -145,6 +152,18 @@ function FeedContent() {
             </div>
 
             <div className="flex flex-wrap gap-3 items-center">
+              <button
+                type="button"
+                onClick={toggleBrazilOnly}
+                className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                  onlyBrazil
+                    ? 'bg-green-900/40 border-green-600 text-green-200'
+                    : 'bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-800'
+                }`}
+              >
+                🇧🇷 Somente Brasil
+              </button>
+
               <select value={category} onChange={(e) => { setCategory(e.target.value); }} className="input-field w-auto">
                 <option value="">Todas as Categorias</option>
                 {categories.map((c) => (
@@ -201,7 +220,7 @@ function FeedContent() {
           </form>
 
           <div className="mt-2 text-xs text-gray-500">
-            {total} resultados {search && `para "${search}"`}
+            {total} resultados {search && `para "${search}"`} {onlyBrazil && '(filtro Brasil ativo)'}
           </div>
         </div>
 
@@ -223,7 +242,7 @@ function FeedContent() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-100 mb-1">{item.title}</h3>
+                    <h3 className="mb-1 font-semibold text-gray-800 dark:text-gray-100">{item.title}</h3>
                     {item.summary && (
                       <p className="text-sm text-gray-400 line-clamp-2">{item.summary}</p>
                     )}
