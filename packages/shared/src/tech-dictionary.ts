@@ -13,9 +13,9 @@ export const TECH_DICTIONARY: TechEntry[] = [
   { key: 'npm', label: 'npm', aliases: ['npm', 'npmjs', 'npm registry'], category: 'package_manager' },
   { key: 'react', label: 'React', aliases: ['react', 'reactjs', 'react.js'], category: 'framework' },
   { key: 'react_native', label: 'React Native', aliases: ['react native', 'react-native', 'reactnative'], category: 'framework' },
-  { key: 'typescript', label: 'TypeScript', aliases: ['typescript', 'ts'], category: 'language' },
-  { key: 'javascript', label: 'JavaScript', aliases: ['javascript', 'js', 'ecmascript'], category: 'language' },
-  { key: 'postgresql', label: 'PostgreSQL', aliases: ['postgresql', 'postgres', 'psql', 'pg'], category: 'tool' },
+  { key: 'typescript', label: 'TypeScript', aliases: ['typescript'], category: 'language' },
+  { key: 'javascript', label: 'JavaScript', aliases: ['javascript', 'ecmascript'], category: 'language' },
+  { key: 'postgresql', label: 'PostgreSQL', aliases: ['postgresql', 'postgres', 'psql'], category: 'tool' },
   { key: 'redis', label: 'Redis', aliases: ['redis'], category: 'tool' },
   { key: 'docker', label: 'Docker', aliases: ['docker', 'dockerfile', 'docker-compose'], category: 'tool' },
   { key: 'kubernetes', label: 'Kubernetes', aliases: ['kubernetes', 'k8s', 'kubectl'], category: 'platform' },
@@ -33,16 +33,31 @@ export const TECH_DICTIONARY: TechEntry[] = [
   { key: 'jackson', label: 'Jackson', aliases: ['jackson', 'jackson-databind'], category: 'tool' },
 ];
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function aliasMatches(text: string, alias: string): boolean {
+  const normalizedAlias = alias.toLowerCase().trim();
+  if (!normalizedAlias) return false;
+
+  // Require token boundaries to avoid false positives like matching `ts` inside random words.
+  const pattern = new RegExp(`(^|[^a-z0-9])${escapeRegex(normalizedAlias)}([^a-z0-9]|$)`, 'i');
+  return pattern.test(text);
+}
+
 export function detectTechnologies(text: string): string[] {
   const lower = text.toLowerCase();
   const found = new Set<string>();
+
   for (const tech of TECH_DICTIONARY) {
     for (const alias of tech.aliases) {
-      if (lower.includes(alias)) {
+      if (aliasMatches(lower, alias)) {
         found.add(tech.key);
         break;
       }
     }
   }
+
   return Array.from(found);
 }

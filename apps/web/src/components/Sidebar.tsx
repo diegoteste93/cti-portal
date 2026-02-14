@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AuthUser, isAdmin, isEditor, logout } from '@/lib/auth';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const nav = [
   { href: '/dashboard', label: 'Painel', icon: '□' },
@@ -49,8 +50,8 @@ export default function Sidebar({ user }: { user: AuthUser }) {
   }, [user?.id]);
 
   return (
-    <aside className="w-64 bg-gray-900 border-r border-gray-800 min-h-screen flex flex-col">
-      <div className="p-6 border-b border-gray-800">
+    <aside className="w-64 bg-white border-r border-gray-200 dark:bg-gray-900 dark:border-gray-800 min-h-screen flex flex-col transition-colors">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-800">
         {customLogoUrl ? (
           <img
             src={customLogoUrl}
@@ -60,7 +61,7 @@ export default function Sidebar({ user }: { user: AuthUser }) {
         ) : (
           <h1 className="text-xl font-bold text-cti-accent">CTI Portal</h1>
         )}
-        <p className="text-xs text-gray-500 mt-1">Inteligência de Ameaças</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Inteligência de Ameaças</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
@@ -71,7 +72,7 @@ export default function Sidebar({ user }: { user: AuthUser }) {
             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
               pathname === item.href
                 ? 'bg-cti-accent/10 text-cti-accent'
-                : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800'
             }`}
           >
             <span className="text-lg">{item.icon}</span>
@@ -82,7 +83,7 @@ export default function Sidebar({ user }: { user: AuthUser }) {
         {(isAdmin(user) || isEditor(user)) && (
           <>
             <div className="pt-4 pb-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Administração
               </span>
             </div>
@@ -95,7 +96,7 @@ export default function Sidebar({ user }: { user: AuthUser }) {
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     pathname.startsWith(item.href)
                       ? 'bg-cti-accent/10 text-cti-accent'
-                      : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800'
                   }`}
                 >
                   <span className="text-lg">{item.icon}</span>
@@ -107,23 +108,26 @@ export default function Sidebar({ user }: { user: AuthUser }) {
         )}
       </nav>
 
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-3">
           {user.picture && (
             <img src={user.picture} alt="" className="w-8 h-8 rounded-full" />
           )}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{user.name}</p>
-            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
           </div>
+        </div>
+        <div className="mt-3">
+          <ThemeToggle />
         </div>
         <button
           onClick={logout}
-          className="mt-3 w-full text-left text-xs text-gray-500 hover:text-red-400 transition-colors"
+          className="mt-3 w-full text-left text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
         >
           Sair
         </button>
-        <div className="mt-3 pt-3 border-t border-gray-800 text-[11px] text-gray-500">
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800 text-[11px] text-gray-500 dark:text-gray-400">
           <p>Branch PRD: <span className="font-mono">{branchName}</span></p>
           <p>Versão PRD: <span className="font-mono">{commitHash}</span></p>
           <p>Atualizado em: {buildTimeLabel}</p>
