@@ -1,15 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginWithGoogle, devLogin, localLogin, passwordLogin } from '@/lib/auth';
+import { loginWithGoogle, passwordLogin } from '@/lib/auth';
 import { useAuth } from '@/components/AuthProvider';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [devEmail, setDevEmail] = useState('admin@ctiportal.local');
-  const [localUsername, setLocalUsername] = useState('admin');
-  const [localPassword, setLocalPassword] = useState('admin123');
   const [accountEmail, setAccountEmail] = useState('');
   const [accountPassword, setAccountPassword] = useState('');
   const router = useRouter();
@@ -23,7 +20,7 @@ export default function LoginPage() {
       const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=id_token&scope=${scope}&nonce=${Date.now()}`;
       window.location.href = url;
     } else {
-      setError('Google Client ID não configurado. Use o login dev abaixo.');
+      setError('Google Client ID não configurado. Entre com email e senha.');
     }
   };
 
@@ -41,39 +38,42 @@ export default function LoginPage() {
     }
   };
 
-  const handleLocalLogin = async () => {
+  const handleGoogleTokenLogin = async () => {
+    const hash = window.location.hash.replace('#', '');
+    const params = new URLSearchParams(hash);
+    const idToken = params.get('id_token');
+    if (!idToken) return;
+
     setLoading(true);
     setError('');
     try {
-      await localLogin(localUsername, localPassword);
+      await loginWithGoogle(idToken);
       await refresh();
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Falha no login local');
+      setError(err.message || 'Falha no login com Google');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDevLogin = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      await devLogin(devEmail);
-      await refresh();
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Falha no login');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash.includes('id_token=')) {
+      handleGoogleTokenLogin();
     }
-  };
+  }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
+    <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
       <div className="w-full max-w-md">
         <div className="card text-center">
-          <div className="mb-8">
+          <div className="mb-8 flex flex-col items-center">
+            <div className="w-14 h-14 rounded-2xl bg-cti-accent/15 border border-cti-accent/30 flex items-center justify-center mb-3">
+              <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L4 6V12C4 17 7.4 21.7 12 23C16.6 21.7 20 17 20 12V6L12 2Z" stroke="#38bdf8" strokeWidth="1.8"/>
+                <path d="M9 12L11 14L15 10" stroke="#22d3ee" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
             <h1 className="text-3xl font-bold text-cti-accent mb-2">CTI Portal</h1>
             <p className="text-gray-400 text-sm">Plataforma de Inteligência de Ameaças Cibernéticas</p>
           </div>
@@ -84,7 +84,6 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Google OIDC Login */}
           <button
             onClick={handleGoogleRedirect}
             disabled={loading}
@@ -99,7 +98,6 @@ export default function LoginPage() {
             {loading ? 'Entrando...' : 'Entrar com Google'}
           </button>
 
-          {/* Login com email e senha */}
           <div className="mt-6 pt-4 border-t border-gray-800">
             <div className="flex items-center gap-2 justify-center mb-3">
               <span className="badge bg-indigo-900 text-indigo-200">CONTA</span>
@@ -127,67 +125,6 @@ export default function LoginPage() {
               >
                 {loading ? 'Entrando...' : 'Entrar com senha'}
               </button>
-            </div>
-          </div>
-
-          {/* Local Admin Login */}
-          <div className="mt-6 pt-4 border-t border-gray-800">
-            <div className="flex items-center gap-2 justify-center mb-3">
-              <span className="badge bg-blue-900 text-blue-200">LOCAL</span>
-              <span className="text-xs text-gray-500">Usuário e senha de administrador local</span>
-            </div>
-            <div className="space-y-2">
-              <input
-                type="text"
-                value={localUsername}
-                onChange={(e) => setLocalUsername(e.target.value)}
-                placeholder="Usuário"
-                className="input-field text-sm"
-              />
-              <input
-                type="password"
-                value={localPassword}
-                onChange={(e) => setLocalPassword(e.target.value)}
-                placeholder="Senha"
-                className="input-field text-sm"
-              />
-              <button
-                onClick={handleLocalLogin}
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 text-sm"
-              >
-                {loading ? 'Entrando...' : 'Entrar com usuário local'}
-              </button>
-              <p className="text-[10px] text-gray-600 mt-1">
-                Padrão local: usuário <span className="font-mono">admin</span> e senha <span className="font-mono">admin123</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Dev Login */}
-          <div className="mt-6 pt-4 border-t border-gray-800">
-            <div className="flex items-center gap-2 justify-center mb-3">
-              <span className="badge bg-amber-900 text-amber-200">DEV</span>
-              <span className="text-xs text-gray-500">Login rápido (apenas desenvolvimento)</span>
-            </div>
-            <div className="space-y-2">
-              <input
-                type="email"
-                value={devEmail}
-                onChange={(e) => setDevEmail(e.target.value)}
-                placeholder="Email do usuário"
-                className="input-field text-sm"
-              />
-              <button
-                onClick={handleDevLogin}
-                disabled={loading}
-                className="w-full bg-amber-600 hover:bg-amber-500 text-white font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 text-sm"
-              >
-                {loading ? 'Entrando...' : 'Entrar como Dev'}
-              </button>
-              <p className="text-[10px] text-gray-600 mt-1">
-                Administrador padrão: admin@ctiportal.local (criado pelo seed inicial)
-              </p>
             </div>
           </div>
 

@@ -1,25 +1,21 @@
 const { execSync } = require('child_process');
 
+function getGitValue(command, fallback) {
+  try {
+    return execSync(command, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+  } catch {
+    return fallback;
+  }
+}
+
 const buildTime = new Date().toISOString();
 const commitHash = process.env.VERCEL_GIT_COMMIT_SHA
   || process.env.GIT_COMMIT_SHA
-  || (() => {
-    try {
-      return execSync('git rev-parse --short HEAD').toString().trim();
-    } catch {
-      return 'local';
-    }
-  })();
+  || getGitValue('git rev-parse --short HEAD', 'local');
 const branchName = process.env.VERCEL_GIT_COMMIT_REF
   || process.env.GIT_BRANCH
   || process.env.BRANCH_NAME
-  || (() => {
-    try {
-      return execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
-    } catch {
-      return 'prd';
-    }
-  })();
+  || getGitValue('git rev-parse --abbrev-ref HEAD', 'prd');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

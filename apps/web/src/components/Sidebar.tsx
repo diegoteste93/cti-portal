@@ -7,7 +7,7 @@ import { AuthUser, isAdmin, isEditor, logout } from '@/lib/auth';
 const nav = [
   { href: '/dashboard', label: 'Painel', icon: '□' },
   { href: '/feed', label: 'Feed', icon: '◈' },
-  { href: '/preferences', label: 'Meu Feed', icon: '☆' },
+  { href: '/preferences', label: 'Minhas Preferências', icon: '☆' },
 ];
 
 const adminNav = [
