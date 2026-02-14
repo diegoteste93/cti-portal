@@ -75,6 +75,17 @@ function FeedContent() {
   }, [searchParams]);
 
   useEffect(() => {
+    setSearch(searchParams.get('search') || searchParams.get('q') || '');
+    setCategory(searchParams.get('categories') || searchParams.get('category') || '');
+    setTag(searchParams.get('tags') || searchParams.get('tag') || '');
+    setCountry(searchParams.get('country') || searchParams.get('pais') || '');
+    setCve(searchParams.get('cve') || searchParams.get('cves') || '');
+    setSeverity(searchParams.get('severity') || '');
+    setDateFrom(searchParams.get('dateFrom') || '');
+    setDateTo(searchParams.get('dateTo') || '');
+  }, [searchParams]);
+
+  useEffect(() => {
     if (user) {
       api.get<any[]>('/categories').then(setCategories).catch(console.error);
     }

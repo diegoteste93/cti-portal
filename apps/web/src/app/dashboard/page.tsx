@@ -183,6 +183,18 @@ export default function DashboardPage() {
     general: '#6b7280',
   };
 
+  const categoryPalette: Record<string, string> = {
+    vulnerability: '#ef4444',
+    exploit: '#f97316',
+    ransomware: '#a855f7',
+    fraud: '#eab308',
+    data_leak: '#ec4899',
+    malware: '#dc2626',
+    phishing: '#f59e0b',
+    supply_chain: '#3b82f6',
+    general: '#6b7280',
+  };
+
   const categories = Object.entries(stats?.byCategoryCount || {})
     .map(([slug, count]) => ({
       slug,

@@ -94,6 +94,13 @@ export class SourcesService {
     return saved;
   }
 
+  async delete(id: string, actorId: string) {
+    const source = await this.findById(id);
+    await this.sourceRepo.remove(source);
+    await this.auditService.log(actorId, 'SOURCE_DELETED', 'source', id);
+    return { message: 'Fonte removida com sucesso' };
+  }
+
   async triggerFetch(id: string, actorId: string) {
     const source = await this.findById(id);
     await this.ingestQueue.add(JOB_NAMES.FETCH_SOURCE, { sourceId: source.id });
