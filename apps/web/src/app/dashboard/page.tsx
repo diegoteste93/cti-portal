@@ -183,6 +183,8 @@ export default function DashboardPage() {
     general: '#6b7280',
   };
 
+<<<<<<< codex/fix-event-dashboard-click-issue-and-add-filters-rmw9i6
+=======
   const categoryPalette: Record<string, string> = {
     vulnerability: '#ef4444',
     exploit: '#f97316',
@@ -195,6 +197,7 @@ export default function DashboardPage() {
     general: '#6b7280',
   };
 
+>>>>>>> prd
   const buildTagFeedHref = (tag: string) => {
     const params = new URLSearchParams();
     params.set('tags', tag);
@@ -209,7 +212,13 @@ export default function DashboardPage() {
 
   const brazilFeedHref = '/feed?br=1';
 
+<<<<<<< codex/fix-event-dashboard-click-issue-and-add-filters-rmw9i6
+  const categoryDistributionBackground = categories.length > 0
+    ? 'conic-gradient(#0ea5e9 0% 35%, #14b8a6 35% 60%, #8b5cf6 60% 75%, #94a3b8 75% 90%, #ef4444 90% 100%)'
+    : '#e5e7eb';
+=======
   const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
+>>>>>>> prd
 
   const distributionGradient = categories.length
     ? (() => {
@@ -387,6 +396,15 @@ export default function DashboardPage() {
               <div className="card">
                 <h3 className="text-lg font-semibold mb-4">Visão Rápida</h3>
                 <div className="flex items-center gap-4">
+<<<<<<< codex/fix-event-dashboard-click-issue-and-add-filters-rmw9i6
+                  <div
+                    className="h-36 w-36 rounded-full"
+                    style={{
+                      background: categoryDistributionBackground,
+                    }}
+                  >
+                    <div className="m-7 h-22 w-22 rounded-full bg-white dark:bg-gray-900" />
+=======
                   <div className="relative w-28 h-28 flex-shrink-0">
                     <div
                       className="w-full h-full rounded-full"
@@ -395,6 +413,7 @@ export default function DashboardPage() {
                     <div className="absolute inset-4 rounded-full bg-gray-900 border border-gray-700 flex items-center justify-center text-xs text-gray-300 text-center px-1">
                       Categorias
                     </div>
+>>>>>>> prd
                   </div>
                   <div className="space-y-2 text-sm">
                     {(categories.length ? categories : [{ label: 'Sem dados', count: 0 }]).map((item, index) => {
