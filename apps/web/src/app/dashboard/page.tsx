@@ -111,7 +111,12 @@ export default function DashboardPage() {
     return Object.entries(stats?.byCategoryCount || {})
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([slug, count]) => ({ slug, count, label: categoryLabels[slug] || slug }));
+      .map(([slug, count]) => ({
+        slug,
+        count,
+        label: categoryLabels[slug] || slug,
+        color: categoryPalette[slug] || categoryPalette.general,
+      }));
   }, [stats]);
 
   const categoryCountTotal = categories.reduce((sum, category) => sum + category.count, 0);
@@ -243,7 +248,7 @@ export default function DashboardPage() {
                   {categories.map((category) => {
                     const width = categoryCountTotal ? Math.round((category.count / categoryCountTotal) * 100) : 0;
                     return (
-                      <div key={category.slug}>
+                      <div key={item.slug}>
                         <div className="mb-1 flex items-center justify-between text-sm">
                           <span className="text-gray-600 dark:text-gray-300">{category.label}</span>
                           <span className="font-semibold">{category.count}</span>
@@ -335,17 +340,11 @@ export default function DashboardPage() {
             <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
               <div className="mb-4 flex items-center justify-between">
                 <h4 className="text-lg font-semibold">Recentes</h4>
-                <Link href="/feed" className="text-sm text-cyan-600 hover:underline dark:text-cyan-400">
-                  Ver feed completo
-                </Link>
+                <Link href="/feed" className="text-sm text-cyan-600 hover:underline dark:text-cyan-400">Ver feed completo</Link>
               </div>
               <div className="space-y-2">
                 {(stats.recentItems || []).slice(0, 6).map((item: any) => (
-                  <Link
-                    key={item.id}
-                    href={`/feed/${item.id}`}
-                    className="block rounded-lg border border-gray-200 p-3 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
-                  >
+                  <Link key={item.id} href={`/feed/${item.id}`} className="block rounded-lg border border-gray-200 p-3 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-medium">{item.title}</p>
@@ -357,9 +356,18 @@ export default function DashboardPage() {
                 ))}
               </div>
             </section>
+
+            <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+              <h4 className="mb-2 text-lg font-semibold">Top Tecnologias</h4>
+              <div className="flex flex-wrap gap-2">
+                {topTags.map(([tag, count]) => (
+                  <Link key={tag} href={`/feed?tags=${tag}`} className="badge badge-tag hover:opacity-80 transition-opacity">
+                    {tag} ({count})
+                  </Link>
+                ))}
+              </div>
+            </section>
           </div>
-        ) : (
-          <div className="text-red-500">Falha ao carregar dados do dashboard.</div>
         )}
       </main>
     </div>
