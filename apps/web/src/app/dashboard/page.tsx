@@ -476,7 +476,7 @@ export default function DashboardPage() {
                   </div>
                 </Link>
               </div>
-            </section>
+            </div>
 
             <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
               <div className="mb-4 flex items-center justify-between">
