@@ -116,6 +116,18 @@ export default function DashboardPage() {
     custom: 'Personalizado',
   };
 
+  const categoryPalette: Record<string, string> = {
+    vulnerability: '#ef4444',
+    exploit: '#f97316',
+    ransomware: '#a855f7',
+    fraud: '#eab308',
+    data_leak: '#ec4899',
+    malware: '#dc2626',
+    phishing: '#f59e0b',
+    supply_chain: '#3b82f6',
+    general: '#6b7280',
+  };
+
   const timeline = useMemo(() => {
     const base = stats?.itemsThisWeek || 0;
     const today = stats?.itemsToday || 0;
@@ -145,7 +157,12 @@ export default function DashboardPage() {
     return Object.entries(stats?.byCategoryCount || {})
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([slug, count]) => ({ slug, count, label: categoryLabels[slug] || slug }));
+      .map(([slug, count]) => ({
+        slug,
+        count,
+        label: categoryLabels[slug] || slug,
+        color: categoryPalette[slug] || categoryPalette.general,
+      }));
   }, [stats]);
 
   const recentItemsById = useMemo(() => {
@@ -169,18 +186,6 @@ export default function DashboardPage() {
     ],
   };
 
-  const categoryPalette: Record<string, string> = {
-    vulnerability: '#ef4444',
-    exploit: '#f97316',
-    ransomware: '#a855f7',
-    fraud: '#eab308',
-    data_leak: '#ec4899',
-    malware: '#dc2626',
-    phishing: '#f59e0b',
-    supply_chain: '#3b82f6',
-    general: '#6b7280',
-  };
-
   const buildTagFeedHref = (tag: string) => {
     const params = new URLSearchParams();
     params.set('tags', tag);
@@ -197,18 +202,19 @@ export default function DashboardPage() {
 
   const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
 
-  const distributionGradient = categories.length
-    ? (() => {
-        let offset = 0;
-        const segments = categories.map((category) => {
-          const size = (category.count / totalCategoryCount) * 100;
-          const start = offset;
-          offset += size;
-          return `${category.color} ${start}% ${offset}%`;
-        });
-        return `conic-gradient(${segments.join(', ')})`;
-      })()
-    : 'none';
+  const distributionGradient = useMemo(() => {
+    if (!categories.length || !totalCategoryCount) return 'none';
+
+    let offset = 0;
+    const segments = categories.map((category) => {
+      const size = (category.count / totalCategoryCount) * 100;
+      const start = offset;
+      offset += size;
+      return `${category.color} ${start}% ${offset}%`;
+    });
+
+    return `conic-gradient(${segments.join(', ')})`;
+  }, [categories, totalCategoryCount]);
 
   return (
     <div className="flex min-h-screen">
