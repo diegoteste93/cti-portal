@@ -20,6 +20,7 @@ export class ItemsService {
       sourceIds: this.normalizeArrayFilter(filters.sourceIds),
       tags: this.normalizeArrayFilter(filters.tags),
       search: typeof filters.search === 'string' ? filters.search.trim() : '',
+      br: filters.br === '1' || filters.br === 1 || filters.br === true || filters.br === 'true',
     };
 
     let query = this.buildListQuery(normalizedFilters, user, true);
@@ -83,6 +84,21 @@ export class ItemsService {
           { searchLike: `%${filters.search}%` },
         );
       }
+    }
+
+    // Brazil-only filter
+    if (filters.br) {
+      const brazilTerms = [
+        'brasil', 'brazil', 'brasileiro', 'brasileira', 'lgpd', 'anpd', 'gov.br', 'pix', 'cpf', 'cnpj',
+      ];
+
+      qb.andWhere(
+        `(${brazilTerms.map((_, index) => `(item.title ILIKE :br${index} OR item.summary ILIKE :br${index} OR item.content ILIKE :br${index} OR item.tags ILIKE :br${index})`).join(' OR ')})`,
+        brazilTerms.reduce<Record<string, string>>((acc, term, index) => {
+          acc[`br${index}`] = `%${term}%`;
+          return acc;
+        }, {}),
+      );
     }
 
     // Category filter
