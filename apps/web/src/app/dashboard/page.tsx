@@ -202,9 +202,8 @@ export default function DashboardPage() {
 
   const totalCategoryCount = categories.reduce((sum, category) => sum + category.count, 0);
 
-  const distributionGradient = useMemo(() => {
-    if (!categories.length || !totalCategoryCount) return 'none';
-
+  let distributionGradient = 'none';
+  if (categories.length > 0 && totalCategoryCount > 0) {
     let offset = 0;
     const segments = categories.map((category) => {
       const size = (category.count / totalCategoryCount) * 100;
@@ -212,9 +211,8 @@ export default function DashboardPage() {
       offset += size;
       return `${category.color} ${start}% ${offset}%`;
     });
-
-    return `conic-gradient(${segments.join(', ')})`;
-  }, [categories, totalCategoryCount]);
+    distributionGradient = `conic-gradient(${segments.join(', ')})`;
+  }
 
   return (
     <div className="flex min-h-screen">
