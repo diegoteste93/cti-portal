@@ -220,7 +220,7 @@ export default function DashboardPage() {
                       return <div key={`pct-${item.slug}`}>{item.label}: {pct}%</div>;
                     })}
                   </div>
-                </div>
+                )}
               </div>
             </section>
 
