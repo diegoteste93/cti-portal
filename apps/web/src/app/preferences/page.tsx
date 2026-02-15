@@ -160,7 +160,7 @@ export default function PreferencesPage() {
     <div className="flex min-h-screen">
       <Sidebar user={user} />
       <main className="flex-1 p-8 overflow-auto">
-        <h2 className="text-2xl font-bold mb-2">Preferências do Meu Feed</h2>
+        <h2 className="text-2xl font-bold mb-2">Preferências</h2>
         <p className="text-sm text-gray-400 mb-6">
           Personalize seu feed. Essas preferências são combinadas com as políticas dos seus grupos.
         </p>
