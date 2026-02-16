@@ -99,7 +99,7 @@ function FeedContent() {
     } finally {
       setLoading(false);
     }
-  }, [search, category, tag, country, cve, severity, dateFrom, dateTo, usePersonalized]);
+  }, [effectiveSearch, category, tag, country, cve, severity, dateFrom, dateTo, usePersonalized, onlyBrazil]);
 
   useEffect(() => {
     if (user) fetchItems();
@@ -113,9 +113,21 @@ function FeedContent() {
   };
 
   const clearFilters = () => {
-    setSearch(''); setCategory(''); setTag(''); setCountry(''); setCve(''); setSeverity('');
-    setDateFrom(''); setDateTo('');
+    setSearch('');
+    setCategory('');
+    setTag('');
+    setCountry('');
+    setCve('');
+    setSeverity('');
+    setDateFrom('');
+    setDateTo('');
+    setOnlyBrazil(false);
     router.replace('/feed');
+  };
+
+  const toggleBrazilOnly = () => {
+    setOnlyBrazil((prev) => !prev);
+    setPage(1);
   };
 
   return (
