@@ -75,6 +75,10 @@ export default function DashboardPage() {
       .slice(0, 8);
   }, [stats]);
 
+  const recentUpdates = useMemo(() => {
+    return (stats?.recentItems || []).slice(0, 10);
+  }, [stats]);
+
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -134,74 +138,94 @@ export default function DashboardPage() {
         ) : !stats ? (
           <div className="text-red-500">Failed to load dashboard data.</div>
         ) : (
-          <div className="space-y-6">
-            <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <p className="text-xs text-gray-500">Total Items</p>
-                <p className="mt-1 text-2xl font-bold">{stats.totalItems.toLocaleString()}</p>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <p className="text-xs text-gray-500">Items Today</p>
-                <p className="mt-1 text-2xl font-bold">{stats.itemsToday.toLocaleString()}</p>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <p className="text-xs text-gray-500">Items This Week</p>
-                <p className="mt-1 text-2xl font-bold">{stats.itemsThisWeek.toLocaleString()}</p>
-              </div>
-            </section>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="space-y-6">
+              <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                  <p className="text-xs text-gray-500">Total Items</p>
+                  <p className="mt-1 text-2xl font-bold">{stats.totalItems.toLocaleString()}</p>
+                </div>
+                <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                  <p className="text-xs text-gray-500">Items Today</p>
+                  <p className="mt-1 text-2xl font-bold">{stats.itemsToday.toLocaleString()}</p>
+                </div>
+                <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                  <p className="text-xs text-gray-500">Items This Week</p>
+                  <p className="mt-1 text-2xl font-bold">{stats.itemsThisWeek.toLocaleString()}</p>
+                </div>
+              </section>
 
-            <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <h3 className="mb-3 text-lg font-semibold">Top Categories</h3>
-                <div className="space-y-2">
-                  {(topCategories.length ? topCategories : [['none', 0]]).map(([name, count]) => (
-                    <div key={name} className="flex items-center justify-between text-sm">
-                      <Link href={`/feed?categories=${name}`} className="text-gray-700 hover:underline dark:text-gray-200">
-                        {name}
+              <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                  <h3 className="mb-3 text-lg font-semibold">Top Categories</h3>
+                  <div className="space-y-2">
+                    {(topCategories.length ? topCategories : [['none', 0]]).map(([name, count]) => (
+                      <div key={name} className="flex items-center justify-between text-sm">
+                        <Link href={`/feed?categories=${name}`} className="text-gray-700 hover:underline dark:text-gray-200">
+                          {name}
+                        </Link>
+                        <span className="font-semibold">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                  <h3 className="mb-3 text-lg font-semibold">Top Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {(topTags.length ? topTags : [['none', 0]]).map(([tag, count]) => (
+                      <Link key={tag} href={`/feed?tags=${tag}`} className="badge badge-tag hover:opacity-80 transition-opacity">
+                        {tag} ({count})
                       </Link>
-                      <span className="font-semibold">{count}</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </section>
 
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <h3 className="mb-3 text-lg font-semibold">Top Tags</h3>
-                <div className="flex flex-wrap gap-2">
-                  {(topTags.length ? topTags : [['none', 0]]).map(([tag, count]) => (
-                    <Link key={tag} href={`/feed?tags=${tag}`} className="badge badge-tag hover:opacity-80 transition-opacity">
-                      {tag} ({count})
-                    </Link>
-                  ))}
+              <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Overview</h3>
+                  <span className="text-xs text-gray-500">Range: {rangeLabels[selectedRange]}</span>
                 </div>
-              </div>
-            </section>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Monitoramento consolidado das últimas ameaças capturadas, com foco em volume, categorias e tecnologias
+                  mais citadas no período selecionado.
+                </p>
+              </section>
+            </div>
 
-            <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <aside className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 xl:sticky xl:top-6 xl:h-fit">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Recent Items</h3>
-                <Link href="/feed" className="text-sm text-cyan-600 hover:underline dark:text-cyan-400">
-                  Open full feed
+                <h3 className="text-lg font-semibold">Latest updates</h3>
+                <Link href="/feed" className="text-xs text-cyan-600 hover:underline dark:text-cyan-400">
+                  View all
                 </Link>
               </div>
-              <div className="space-y-2">
-                {(stats.recentItems || []).slice(0, 8).map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/feed/${item.id}`}
-                    className="block rounded-lg border border-gray-200 p-3 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{item.title}</p>
-                        <p className="text-xs text-gray-500">{item.source?.name || 'Unknown source'}</p>
+              <div className="space-y-3">
+                {recentUpdates.length ? (
+                  recentUpdates.map((item, index) => (
+                    <Link
+                      key={item.id}
+                      href={`/feed/${item.id}`}
+                      className="block rounded-lg border border-gray-200 p-3 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-50 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-200">
+                          {index + 1}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{item.title}</p>
+                          <p className="text-xs text-gray-500">{item.source?.name || 'Unknown source'}</p>
+                        </div>
+                        <SeverityBadge severity={item.severity} />
                       </div>
-                      <SeverityBadge severity={item.severity} />
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No updates available.</p>
+                )}
               </div>
-            </section>
+            </aside>
           </div>
         )}
       </main>
